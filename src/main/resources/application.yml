@@ -9,5 +9,5 @@ springdoc:
     path: /swagger-ui.html
 
 jwt:
-  secret: "change-this-secret-key-change-this-secret-key"
-  expire-time: 3600000
+  secret: ${JWT_SECRET}
+  expire-time: ${JWT_EXPIRE_TIME:3600000}
