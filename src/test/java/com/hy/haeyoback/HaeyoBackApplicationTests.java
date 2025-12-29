@@ -1,0 +1,13 @@
+package com.hy.haeyoback;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class HaeyoBackApplicationTests {
+
+    @Test
+    void contextLoads() {
+    }
+
+}
