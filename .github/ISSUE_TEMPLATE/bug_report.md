@@ -1,23 +1,23 @@
 ---
-name: "\uBC84\uADF8 \uB9AC\uD3EC\uD2B8"
-about: "\uBC84\uADF8 \uB610\uB294 \uC624\uC791\uB3D9 \uC81C\uBCF4"
-title: "[Bug] "
-labels: bug
-assignees: ""
+name: Bug Report
+about: 버그를 발견했나요? 여기에 신고해주세요!
+title: "[BUG] "
+labels: ["bug"]
+assignees: []
 ---
 
-## \uD604\uC0C1
+## 버그 설명
+버그에 대한 명확하고 간결한 설명을 작성해주세요.
 
-## \uAE30\uB300 \uD589\uB3D9
+## 재현 단계
+버그를 재현하는 단계:
+1. '...'로 이동
+2. '...'를 클릭
+3. '...'까지 스크롤
+4. 오류 확인
 
-## \uC7AC\uD604 \uBC29\uBC95
-1.
-2.
-3.
+## 스크린샷
+해당하는 경우 문제를 설명하는 데 도움이 되는 스크린샷을 추가해주세요.
 
-## \uD658\uACBD
-- OS:
-- Java \uBC84\uC804:
-- \uBE4C\uB4DC/\uC2E4\uD589 \uBC29\uBC95:
-
-## \uCD94\uAC00 \uC815\uBCF4
+## 추가 정보
+문제에 대한 다른 컨텍스트를 여기에 추가해주세요.

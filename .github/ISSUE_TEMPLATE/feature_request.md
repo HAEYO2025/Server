@@ -1,15 +1,13 @@
 ---
-name: "\uAE30\uB2A5 \uC694\uCCAD"
-about: "\uC0C8 \uAE30\uB2A5 \uB610\uB294 \uAC1C\uC120 \uC81C\uC548"
-title: "[Feature] "
-labels: enhancement
-assignees: ""
+name: Feature Request
+about: 새로운 기능을 제안해주세요!
+title: "[FEATURE] "
+labels: ["enhancement"]
+assignees: []
 ---
 
-## \uC81C\uC548 \uBC30\uACBD
+## 기능 설명
+원하는 기능에 대한 명확하고 간결한 설명을 작성해주세요.
 
-## \uC6D0\uD558\uB294 \uACBD\uD5D8/\uAE30\uB2A5
-
-## \uB300\uC548
-
-## \uCD94\uAC00 \uC815\uBCF4
+## 추가 정보
+기능 요청에 대한 다른 컨텍스트나 스크린샷을 여기에 추가해주세요.

@@ -1,10 +1,20 @@
-## \uBCC0\uACBD \uAC1C\uC694
+## 요약
+이 PR에서 수행한 작업에 대한 간단한 설명을 작성해주세요.
 
-## \uD14C\uC2A4\uD2B8 \uBC29\uBC95
-- [ ] \uB85C\uCEEC \uD14C\uC2A4\uD2B8 \uC2E4\uD589: 
-- [ ] \uC218\uB3D9 \uD655\uC778: 
+## 관련 이슈
+close #
 
-## \uCCB4\uD06C\uB9AC\uC2A4\uD2B8
-- [ ] \uD544\uC694 \uD55C \uBB38\uC11C/\uC8FC\uC11D \uC5C5\uB370\uC774\uD2B8
-- [ ] \uBCC0\uACBD \uC601\uD5A5 \uBC94\uC704 \uD655\uC778
-- [ ] \uD0C0\uC778 \uC791\uC5C5\uACFC \uCDA9\uB3CC \uC5EC\uBD80 \uD655\uC778
+## 변경 사항
+- [ ] 새로운 기능 추가
+- [ ] 버그 수정
+- [ ] 문서 업데이트
+- [ ] 스타일 변경
+- [ ] 리팩토링
+- [ ] 성능 개선
+- [ ] 테스트 추가
+
+## 체크리스트
+- [ ] 코드 리뷰 완료
+- [ ] 테스트 통과
+- [ ] 문서 업데이트 (필요한 경우)
+- [ ] 브레이킹 체인지 확인
