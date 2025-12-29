@@ -39,7 +39,13 @@ public class JwtProvider {
         Claims claims = parseClaims(token);
         String subject = claims.getSubject();
         String email = claims.get("email", String.class);
-        JwtUserDetails principal = new JwtUserDetails(Long.valueOf(subject), email);
+        Long userId;
+        try {
+            userId = Long.valueOf(subject);
+        } catch (NumberFormatException ex) {
+            throw new io.jsonwebtoken.JwtException("Invalid subject", ex);
+        }
+        JwtUserDetails principal = new JwtUserDetails(userId, email);
         return new UsernamePasswordAuthenticationToken(
                 principal,
                 null,
