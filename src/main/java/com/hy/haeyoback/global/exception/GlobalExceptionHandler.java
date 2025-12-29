@@ -2,6 +2,8 @@ package com.hy.haeyoback.global.exception;
 
 import com.hy.haeyoback.global.api.ApiResponse;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException ex) {
@@ -45,7 +49,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception ex) {
-        ApiResponse<Void> body = ApiResponse.failure(ErrorCode.INTERNAL_ERROR.name(), ex.getMessage());
+        logger.error("Unhandled exception", ex);
+        ApiResponse<Void> body = ApiResponse.failure(
+                ErrorCode.INTERNAL_ERROR.name(),
+                ErrorCode.INTERNAL_ERROR.getDefaultMessage()
+        );
         return ResponseEntity.status(ErrorCode.INTERNAL_ERROR.getStatus()).body(body);
     }
 }
