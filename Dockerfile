@@ -3,14 +3,19 @@ WORKDIR /app
 
 COPY gradle gradle
 COPY gradlew build.gradle settings.gradle ./
-RUN ./gradlew --no-daemon dependencies
+
+RUN chmod +x gradlew
+
+RUN ./gradlew dependencies --no-daemon
 
 COPY src src
-RUN ./gradlew --no-daemon clean bootJar
+
+RUN ./gradlew bootJar --no-daemon
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar /app/app.jar
+
+COPY --from=build /app/build/libs/*.jar app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
