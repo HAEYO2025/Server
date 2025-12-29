@@ -1,14 +1,30 @@
 reviews:
   review_status: true
-  request_changes_workflow: false
+  request_changes_workflow: true
   high_level_summary: true
+  inline_code_review: true
+  suggestions: true
+  security_review: true
   poem: false
   collapse_walkthrough: false
-  auto_review:
-    enabled: true
-    drafts: false
-    base_branches:
-      - main
-      - develop
+
+auto_review:
+  enabled: true
+  drafts: false
+  base_branches:
+    - main
+    - develop
+
+file_filters:
+  included:
+    - "src/**"
+  excluded:
+    - "*.md"
+    - "*.yml"
+    - "*.yaml"
+    - "*.json"
+    - "*.gitignore"
+    - "build/**"
+    - "gradle/**"
 
 language: ko
