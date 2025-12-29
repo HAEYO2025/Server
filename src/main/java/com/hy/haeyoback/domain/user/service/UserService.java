@@ -45,4 +45,9 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "User not found"));
         return new UserResponse(user.getId(), user.getEmail());
     }
+
+    public User getUserEntity(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "User not found"));
+    }
 }

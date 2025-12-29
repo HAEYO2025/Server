@@ -2,6 +2,7 @@ package com.hy.haeyoback.domain.auth.controller;
 
 import com.hy.haeyoback.domain.auth.dto.LoginRequest;
 import com.hy.haeyoback.domain.auth.dto.LoginResponse;
+import com.hy.haeyoback.domain.auth.dto.RefreshTokenRequest;
 import com.hy.haeyoback.domain.auth.dto.SignupRequest;
 import com.hy.haeyoback.domain.auth.service.AuthService;
 import com.hy.haeyoback.domain.user.dto.UserResponse;
@@ -37,8 +38,15 @@ public class AuthController {
         return ApiResponse.success(response);
     }
 
+    @PostMapping("/refresh")
+    public ApiResponse<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        LoginResponse response = authService.refresh(request.getRefreshToken());
+        return ApiResponse.success(response);
+    }
+
     @PostMapping("/logout")
-    public ApiResponse<Void> logout() {
+    public ApiResponse<Void> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        authService.logout(request.getRefreshToken());
         return ApiResponse.success(null);
     }
 }
