@@ -1,0 +1,23 @@
+---
+name: "\uBC84\uADF8 \uB9AC\uD3EC\uD2B8"
+about: "\uBC84\uADF8 \uB610\uB294 \uC624\uC791\uB3D9 \uC81C\uBCF4"
+title: "[Bug] "
+labels: bug
+assignees: ""
+---
+
+## \uD604\uC0C1
+
+## \uAE30\uB300 \uD589\uB3D9
+
+## \uC7AC\uD604 \uBC29\uBC95
+1.
+2.
+3.
+
+## \uD658\uACBD
+- OS:
+- Java \uBC84\uC804:
+- \uBE4C\uB4DC/\uC2E4\uD589 \uBC29\uBC95:
+
+## \uCD94\uAC00 \uC815\uBCF4
