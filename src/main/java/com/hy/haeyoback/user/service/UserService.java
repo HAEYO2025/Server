@@ -19,18 +19,22 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponse signup(String email, String password) {
+    public UserResponse signup(String username, String email, String password) {
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new CustomException(ErrorCode.VALIDATION_ERROR, "Username already exists");
+        }
+
         if (userRepository.findByEmail(email).isPresent()) {
             throw new CustomException(ErrorCode.VALIDATION_ERROR, "Email already exists");
         }
 
-        User user = new User(email, passwordEncoder.encode(password));
+        User user = new User(username, email, passwordEncoder.encode(password));
         User saved = userRepository.save(user);
         return new UserResponse(saved.getId(), saved.getEmail());
     }
 
-    public User authenticate(String email, String password) {
-        User user = userRepository.findByEmail(email).orElse(null);
+    public User authenticate(String username, String password) {
+        User user = userRepository.findByUsername(username).orElse(null);
 
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
