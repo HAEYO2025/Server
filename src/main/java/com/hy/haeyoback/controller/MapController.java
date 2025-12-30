@@ -8,11 +8,12 @@ public class MapController {
     
     @GetMapping("/")
     public String index() {
-        return "redirect:/login.html";
+        // 루트 경로는 바로 지도 페이지로 이동
+        return "redirect:/index.html";
     }
     
     @GetMapping("/map")
     public String map() {
-        return "index.html";
+        return "redirect:/index.html";
     }
 }

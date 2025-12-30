@@ -27,11 +27,21 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // 인증 관련 API는 모두 허용
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/**").permitAll()
-                .requestMatchers("/", "/login.html", "/signup.html", "/index.html").permitAll()
+                
+                // POST 요청 (마커 생성)은 인증 필요
+                .requestMatchers("/api/posts").authenticated()
+                
+                // GET 요청 (마커 조회)는 모두 허용
+                .requestMatchers("/api/posts/**").permitAll()
+                
+                // 정적 리소스 허용 (HTML 페이지 모두 접근 가능)
+                .requestMatchers("/", "/login.html", "/signup.html", "/index.html", "/map.html").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
-                .requestMatchers("/**").permitAll()  // 이렇게 단순하게
+                .requestMatchers("/api/geocoding/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                
                 .anyRequest().permitAll()
             );
         

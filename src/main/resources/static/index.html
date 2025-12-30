@@ -502,7 +502,7 @@
             <h1>📍 실시간 위치 추적</h1>
             <div class="user-info">
                 <span class="username" id="userInfo"></span>
-                <button class="btn-logout" onclick="logout()">로그아웃</button>
+                
             </div>
         </div>
     </div>
@@ -1069,31 +1069,256 @@
             errorBanner.style.display = 'block';
         }
 
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('user');
+            return userStr ? JSON.parse(userStr) : null;
+        }
+
+        // 로그인 여부 확인
+        function isLoggedIn() {
+            return getCurrentUser() !== null;
+        }
+
+        // 마커 생성 시도
+        async function createPost(postData) {
+            const user = getCurrentUser();
+            
+            // 로그인 확인
+            if (!user) {
+                // 로그인 유도 메시지 표시
+                if (confirm('마커를 생성하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
+                    window.location.href = '/login.html';
+                }
+                return null;
+            }
+            
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': user.username
+                    },
+                    body: JSON.stringify(postData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    if (data.requireLogin) {
+                        // 로그인 필요 에러
+                        alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+                        window.location.href = '/login.html';
+                        return null;
+                    }
+                    throw new Error(data.error || '게시물 생성 실패');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error creating post:', error);
+                alert(error.message);
+                return null;
+            }
+        }
+
+        // 마커 조회 (로그인 불필요)
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/posts');
+                const posts = await response.json();
+                return posts;
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                return [];
+            }
+        }
+
+        // 영역 내 마커 조회 (로그인 불필요)
+        async function loadPostsInBounds(bounds) {
+            const params = new URLSearchParams({
+                minLat: bounds.minLat,
+                maxLat: bounds.maxLat,
+                minLon: bounds.minLon,
+                maxLon: bounds.maxLon
+            });
+            
+            try {
+                const response = await fetch(`/api/posts/bounds?${params}`);
+                const posts = await response.json();
+                return posts;
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                return [];
+            }
+        }
+
+        // 지도 클릭 이벤트 핸들러 예제
+        function handleMapClick(lat, lng) {
+            if (!isLoggedIn()) {
+                // 로그인하지 않은 경우 안내 메시지
+                showLoginPrompt();
+                return;
+            }
+            
+            // 로그인한 경우 마커 생성 폼 표시
+            showCreatePostForm(lat, lng);
+        }
+
+        // 로그인 유도 메시지 표시
+        function showLoginPrompt() {
+            const modal = document.createElement('div');
+            modal.className = 'login-prompt-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>로그인이 필요합니다</h3>
+                    <p>마커를 생성하려면 로그인해주세요.</p>
+                    <p>마커 조회는 로그인 없이도 가능합니다.</p>
+                    <div class="modal-buttons">
+                        <button onclick="window.location.href='/login.html'">로그인</button>
+                        <button onclick="this.closest('.login-prompt-modal').remove()">취소</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        // 마커 생성 폼 표시
+        function showCreatePostForm(lat, lng) {
+            const modal = document.createElement('div');
+            modal.className = 'create-post-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>마커 생성</h3>
+                    <form id="createPostForm">
+                        <input type="hidden" name="latitude" value="${lat}">
+                        <input type="hidden" name="longitude" value="${lng}">
+                        
+                        <label>카테고리:</label>
+                        <select name="category" required>
+                            <option value="TRASH">쓰레기</option>
+                            <option value="DAMAGE">시설물 파손</option>
+                            <option value="WILDLIFE">야생동물</option>
+                        </select>
+                        
+                        <label>설명:</label>
+                        <textarea name="description" rows="4"></textarea>
+                        
+                        <label>사진:</label>
+                        <input type="file" accept="image/*" id="imageInput">
+                        
+                        <div class="modal-buttons">
+                            <button type="submit">생성</button>
+                            <button type="button" onclick="this.closest('.create-post-modal').remove()">취소</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // 폼 제출 이벤트
+            document.getElementById('createPostForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const postData = {
+                    latitude: parseFloat(formData.get('latitude')),
+                    longitude: parseFloat(formData.get('longitude')),
+                    category: formData.get('category'),
+                    description: formData.get('description')
+                };
+                
+                // 이미지 처리
+                const imageFile = document.getElementById('imageInput').files[0];
+                if (imageFile) {
+                    postData.imageBase64 = await fileToBase64(imageFile);
+                }
+                
+                const result = await createPost(postData);
+                if (result) {
+                    alert('마커가 생성되었습니다!');
+                    modal.remove();
+                    // 지도 새로고침 등
+                    loadPosts();
+                }
+            });
+        }
+
+        // 파일을 Base64로 변환
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // 페이지 로드 시 로그인 상태 표시
+        function updateLoginStatus() {
+            const user = getCurrentUser();
+            const loginStatusElement = document.getElementById('loginStatus');
+            
+            if (user) {
+                loginStatusElement.innerHTML = `
+                    <span>환영합니다, ${user.username}님</span>
+                    <button onclick="logout()">로그아웃</button>
+                `;
+            } else {
+                loginStatusElement.innerHTML = `
+                    <span>마커 생성은 로그인이 필요합니다</span>
+                    <button onclick="window.location.href='/login.html'">로그인</button>
+                `;
+            }
+        }
+
+        // 로그아웃
+        function logout() {
+            localStorage.removeItem('user');
+            alert('로그아웃되었습니다.');
+            window.location.reload();
+        }
+
+        // 페이지 로드 시 실행
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLoginStatus();
+            loadPosts(); // 로그인 여부와 관계없이 마커 조회
+        });
+
         function hideError() {
             document.getElementById('error').style.display = 'none';
         }
 
         window.onload = function() {
-            const token = localStorage.getItem('token');
-            const username = localStorage.getItem('username');
-            
-            if (!token) {
-                window.location.href = '/login.html';
-                return;
-            }
-            
-            if (username) {
-                document.getElementById('userInfo').textContent = `${username}님`;
-            }
-            
-            initMap();
+            updateLoginStatus();  // 로그인 상태만 UI에 표시
+            initMap();            // 로그인 여부와 관계없이 지도 초기화
         };
         
         function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('username');
-            window.location.href = '/login.html';
+            localStorage.removeItem('user');
+            alert('로그아웃되었습니다.');
+            window.location.href = '/index.html';  // ✅ index.html에 유지
         }
+
+    function updateLoginStatus() {
+        const username = localStorage.getItem('username');
+        const userInfoDiv = document.getElementById('userInfo');
+        
+        if (username) {
+            userInfoDiv.innerHTML = `
+                <span class="username">${username}님</span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            `;
+        } else {
+            userInfoDiv.innerHTML = `
+                <span class="username">마커 생성은 로그인 필요</span>
+                <button class="btn-login" onclick="window.location.href='/login.html'">로그인</button>
+            `;
+        }
+    }
     </script>
 </body>
 </html>
