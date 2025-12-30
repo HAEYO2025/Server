@@ -1,6 +1,6 @@
 package com.hy.haeyoback.domain.auth.service;
 
-import com.hy.haeyoback.domain.auth.dto.LoginResponse;
+import com.hy.haeyoback.domain.auth.dto.AuthTokens;
 import com.hy.haeyoback.domain.auth.entity.RefreshToken;
 import com.hy.haeyoback.domain.auth.repository.RefreshTokenRepository;
 import com.hy.haeyoback.domain.user.entity.User;
@@ -30,17 +30,17 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public LoginResponse login(String email, String password) {
+    public AuthTokens login(String email, String password) {
         User user = userService.authenticate(email, password);
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtProvider.generateRefreshToken(user.getId());
         JwtProvider.RefreshTokenInfo info = jwtProvider.parseRefreshToken(refreshToken);
         saveRefreshToken(user.getId(), refreshToken, info.expiresAt());
-        return new LoginResponse(accessToken, refreshToken);
+        return new AuthTokens(accessToken, refreshToken);
     }
 
-    public LoginResponse refresh(String refreshToken) {
+    public AuthTokens refresh(String refreshToken) {
         JwtProvider.RefreshTokenInfo info;
         try {
             info = jwtProvider.parseRefreshToken(refreshToken);
@@ -60,7 +60,7 @@ public class AuthService {
         String newRefreshToken = jwtProvider.generateRefreshToken(user.getId());
         JwtProvider.RefreshTokenInfo newInfo = jwtProvider.parseRefreshToken(newRefreshToken);
         saveRefreshToken(user.getId(), newRefreshToken, newInfo.expiresAt());
-        return new LoginResponse(newAccessToken, newRefreshToken);
+        return new AuthTokens(newAccessToken, newRefreshToken);
     }
 
     public void logout(String refreshToken) {
