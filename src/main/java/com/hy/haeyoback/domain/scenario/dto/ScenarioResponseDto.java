@@ -1,6 +1,7 @@
 package com.hy.haeyoback.domain.scenario.dto;
 
 import com.hy.haeyoback.domain.scenario.entity.Scenario;
+import com.hy.haeyoback.domain.user.dto.UserResponse;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ public class ScenarioResponseDto {
     private final Double latitude;
     private final Double longitude;
     private final LocalDateTime startTime;
-    private final String userEmail;
+    private final UserResponse user;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -27,7 +28,7 @@ public class ScenarioResponseDto {
         this.latitude = scenario.getLatitude();
         this.longitude = scenario.getLongitude();
         this.startTime = scenario.getStartTime();
-        this.userEmail = scenario.getUser().getEmail();
+        this.user = new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail());
         this.createdAt = scenario.getCreatedAt();
         this.updatedAt = scenario.getUpdatedAt();
     }
