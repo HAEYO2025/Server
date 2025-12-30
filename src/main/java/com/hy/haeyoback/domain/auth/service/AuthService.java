@@ -9,7 +9,9 @@ import com.hy.haeyoback.global.exception.CustomException;
 import com.hy.haeyoback.global.exception.ErrorCode;
 import com.hy.haeyoback.global.security.JwtProvider;
 import java.time.Instant;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -58,9 +60,19 @@ public class AuthService {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
 
+    @Transactional
     private void saveRefreshToken(Long userId, String refreshToken, Instant expiresAt) {
-        RefreshToken token = refreshTokenRepository.findByUserId(userId)
-                .orElse(new RefreshToken(userId, refreshToken, Instant.EPOCH));
+        RefreshToken token = refreshTokenRepository.findByUserIdForUpdate(userId)
+                .orElse(null);
+        if (token == null) {
+            try {
+                refreshTokenRepository.save(new RefreshToken(userId, refreshToken, expiresAt));
+                return;
+            } catch (DataIntegrityViolationException ex) {
+                token = refreshTokenRepository.findByUserIdForUpdate(userId)
+                        .orElseThrow(() -> ex);
+            }
+        }
         token.rotate(refreshToken, expiresAt);
         refreshTokenRepository.save(token);
     }

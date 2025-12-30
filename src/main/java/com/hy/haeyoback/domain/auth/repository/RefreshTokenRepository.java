@@ -2,13 +2,18 @@ package com.hy.haeyoback.domain.auth.repository;
 
 import com.hy.haeyoback.domain.auth.entity.RefreshToken;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import jakarta.persistence.LockModeType;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByToken(String token);
 
     Optional<RefreshToken> findByUserId(Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<RefreshToken> findByUserIdForUpdate(Long userId);
 
     void deleteByUserId(Long userId);
 

@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.SignatureException;
+import java.sql.SQLException;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,18 +90,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ErrorCode.UNAUTHORIZED.getStatus()).body(body);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
-        logger.warn("Illegal argument: {}", ex.getMessage());
-        ApiResponse<Void> body = ApiResponse.failure(ErrorCode.VALIDATION_ERROR.name(), ex.getMessage());
-        return ResponseEntity.status(ErrorCode.VALIDATION_ERROR.getStatus()).body(body);
-    }
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
         logger.warn("Data integrity violation: {}", ex.getMessage());
         String message = "Data integrity violation";
-        if (ex.getMessage() != null && ex.getMessage().contains("duplicate")) {
+        if (isDuplicateKey(ex.getRootCause())) {
             message = "Duplicate entry detected";
         }
         ApiResponse<Void> body = ApiResponse.failure(ErrorCode.VALIDATION_ERROR.name(), message);
@@ -122,5 +116,13 @@ public class GlobalExceptionHandler {
                 ErrorCode.INTERNAL_ERROR.getDefaultMessage()
         );
         return ResponseEntity.status(ErrorCode.INTERNAL_ERROR.getStatus()).body(body);
+    }
+
+    private boolean isDuplicateKey(Throwable cause) {
+        if (!(cause instanceof SQLException sqlException)) {
+            return false;
+        }
+        String sqlState = sqlException.getSQLState();
+        return "23505".equals(sqlState);
     }
 }
