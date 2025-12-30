@@ -483,6 +483,69 @@
             padding-top: 10px;
             border-top: 1px solid #eee;
         }
+
+        /* 좋아요/싫어요 버튼 스타일 */
+        .popup-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .reaction-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .reaction-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .reaction-btn.like {
+            color: #4CAF50;
+            border-color: #4CAF50;
+        }
+
+        .reaction-btn.like:hover {
+            background: #f1f8f4;
+        }
+
+        .reaction-btn.like.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .reaction-btn.dislike {
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .reaction-btn.dislike:hover {
+            background: #fef1f0;
+        }
+
+        .reaction-btn.dislike.active {
+            background: #f44336;
+            color: white;
+        }
+
+        .reaction-count {
+            font-weight: 700;
+            font-size: 16px;
+        }
         
         @media (max-width: 768px) {
             .location-info {
@@ -668,8 +731,6 @@
             loadPosts();
         }
 
-        
-
         function showPostPopup(post, coordinate) {
             const categoryNames = {
                 'TRASH': '쓰레기',
@@ -698,10 +759,92 @@
                     <span>👤 ${post.username}</span>
                     <span>🕐 ${post.createdAt}</span>
                 </div>
+                <div class="popup-actions">
+                    <button class="reaction-btn like ${getUserReaction(post.id) === 'like' ? 'active' : ''}" 
+                            onclick="handleReaction('${post.id}', 'like')">
+                        👍 <span class="reaction-count">${post.likes || 0}</span>
+                    </button>
+                    <button class="reaction-btn dislike ${getUserReaction(post.id) === 'dislike' ? 'active' : ''}" 
+                            onclick="handleReaction('${post.id}', 'dislike')">
+                        👎 <span class="reaction-count">${post.dislikes || 0}</span>
+                    </button>
+                </div>
             `;
             
             document.getElementById('popup-content').innerHTML = content;
             overlay.setPosition(coordinate);
+        }
+
+        // 사용자의 반응 상태를 가져오는 함수
+        function getUserReaction(postId) {
+            const reactions = JSON.parse(localStorage.getItem('userReactions') || '{}');
+            return reactions[postId] || null;
+        }
+
+        // 사용자의 반응 상태를 저장하는 함수
+        function saveUserReaction(postId, reactionType) {
+            const reactions = JSON.parse(localStorage.getItem('userReactions') || '{}');
+            reactions[postId] = reactionType;
+            localStorage.setItem('userReactions', JSON.stringify(reactions));
+        }
+
+        // 좋아요/싫어요 처리 함수
+        async function handleReaction(postId, reactionType) {
+            const username = localStorage.getItem('username');
+            
+            if (!username) {
+                alert('좋아요/싫어요는 로그인이 필요합니다.');
+                return;
+            }
+
+            const currentReaction = getUserReaction(postId);
+            
+            // 같은 버튼을 다시 누르면 취소
+            const newReactionType = currentReaction === reactionType ? null : reactionType;
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/reaction`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': username
+                    },
+                    body: JSON.stringify({
+                        reactionType: newReactionType
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 로컬스토리지에 반응 상태 저장
+                    if (newReactionType) {
+                        saveUserReaction(postId, newReactionType);
+                    } else {
+                        const reactions = JSON.parse(localStorage.getItem('userReactions') || '{}');
+                        delete reactions[postId];
+                        localStorage.setItem('userReactions', JSON.stringify(reactions));
+                    }
+                    
+                    // 게시물 목록 새로고침
+                    loadPosts();
+                    
+                    // 팝업이 열려있으면 팝업도 업데이트
+                    const overlayPosition = overlay.getPosition();
+                    if (overlayPosition) {
+                        const posts = await fetch('/api/posts').then(r => r.json());
+                        const updatedPost = posts.find(p => p.id === postId);
+                        if (updatedPost) {
+                            showPostPopup(updatedPost, overlayPosition);
+                        }
+                    }
+                } else {
+                    alert('반응 처리 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('반응 처리 오류:', error);
+                alert('서버 연결 오류');
+            }
         }
 
         function openPostModal(coords) {
@@ -872,7 +1015,6 @@
             try {
                 console.log('Kakao 검색 시작:', query);
                 
-                // Kakao API 프록시를 통해 검색
                 const response = await fetch(`/api/kakao/search?query=${encodeURIComponent(query)}`);
                 
                 if (!response.ok) {
@@ -886,18 +1028,15 @@
                 if (data.documents && data.documents.length > 0) {
                     const items = data.documents;
                     
-                    // 검색 결과가 1개면 바로 이동
                     if (items.length === 1) {
                         const item = items[0];
                         const lon = parseFloat(item.x);
                         const lat = parseFloat(item.y);
                         moveToLocation([lon, lat]);
                         
-                        // 주소 정보 표시
                         const address = item.road_address_name || item.address_name || '';
                         alert(`${item.place_name}\n${address}`);
                     } else {
-                        // 여러 결과가 있으면 목록 표시
                         displaySearchResults(items);
                     }
                 } else {
@@ -948,12 +1087,10 @@
                 duration: 1000
             });
             
-            // 위치 정보 업데이트
             document.getElementById('latitude').textContent = coords[1].toFixed(6);
             document.getElementById('longitude').textContent = coords[0].toFixed(6);
         }
 
-        // 검색창 외부 클릭 시 검색 결과 닫기
         document.addEventListener('click', function(event) {
             const searchContainer = document.querySelector('.search-container');
             const resultsDiv = document.getElementById('searchResults');
@@ -962,6 +1099,7 @@
                 resultsDiv.style.display = 'none';
             }
         });
+
         function startTracking() {
             if (!navigator.geolocation) {
                 showError('이 브라우저는 위치 정보를 지원하지 않습니다.');
@@ -1107,18 +1245,14 @@
             return userStr ? JSON.parse(userStr) : null;
         }
 
-        // 로그인 여부 확인
         function isLoggedIn() {
             return getCurrentUser() !== null;
         }
 
-        // 마커 생성 시도
         async function createPost(postData) {
             const user = getCurrentUser();
             
-            // 로그인 확인
             if (!user) {
-                // 로그인 유도 메시지 표시
                 if (confirm('마커를 생성하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
                     window.location.href = '/login.html';
                 }
@@ -1139,7 +1273,6 @@
                 
                 if (!response.ok) {
                     if (data.requireLogin) {
-                        // 로그인 필요 에러
                         alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
                         window.location.href = '/login.html';
                         return null;
@@ -1155,10 +1288,6 @@
             }
         }
 
-        // 마커 조회 (로그인 불필요)
-        
-
-        // 영역 내 마커 조회 (로그인 불필요)
         async function loadPostsInBounds(bounds) {
             const params = new URLSearchParams({
                 minLat: bounds.minLat,
@@ -1177,16 +1306,13 @@
             }
         }
 
-        // 지도 클릭 이벤트 핸들러 예제
         function handleMapClick(event) {
             const feature = map.forEachFeatureAtPixel(event.pixel, f => f);
             
             if (feature && feature.get('post')) {
-                // 기존 마커 클릭 - 팝업 표시
                 const post = feature.get('post');
                 showPostPopup(post, event.coordinate);
             } else {
-                // 빈 곳 클릭 - 로그인 확인
                 const username = localStorage.getItem('username');
                 
                 console.log('지도 클릭! username:', username);
@@ -1199,7 +1325,6 @@
                     return;
                 }
                 
-                // 로그인 되어있으면 마커 생성 모달 열기
                 console.log('로그인 확인됨! 모달 열기');
                 const coords = ol.proj.toLonLat(event.coordinate);
                 selectedCoords = coords;
@@ -1207,7 +1332,6 @@
             }
         }
 
-        // 로그인 유도 메시지 표시
         function showLoginPrompt() {
             const modal = document.createElement('div');
             modal.className = 'login-prompt-modal';
@@ -1225,7 +1349,6 @@
             document.body.appendChild(modal);
         }
 
-        // 마커 생성 폼 표시
         function showCreatePostForm(lat, lng) {
             const modal = document.createElement('div');
             modal.className = 'create-post-modal';
@@ -1259,7 +1382,6 @@
             
             document.body.appendChild(modal);
             
-            // 폼 제출 이벤트
             document.getElementById('createPostForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -1271,7 +1393,6 @@
                     description: formData.get('description')
                 };
                 
-                // 이미지 처리
                 const imageFile = document.getElementById('imageInput').files[0];
                 if (imageFile) {
                     postData.imageBase64 = await fileToBase64(imageFile);
@@ -1281,13 +1402,11 @@
                 if (result) {
                     alert('마커가 생성되었습니다!');
                     modal.remove();
-                    // 지도 새로고침 등
                     loadPosts();
                 }
             });
         }
 
-        // 파일을 Base64로 변환
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1297,7 +1416,6 @@
             });
         }
 
-        // 페이지 로드 시 로그인 상태 표시
         function updateLoginStatus() {
             const user = getCurrentUser();
             const loginStatusElement = document.getElementById('loginStatus');
@@ -1315,17 +1433,15 @@
             }
         }
 
-        // 로그아웃
         function logout() {
             localStorage.removeItem('user');
             alert('로그아웃되었습니다.');
             window.location.reload();
         }
 
-        // 페이지 로드 시 실행
         document.addEventListener('DOMContentLoaded', () => {
             updateLoginStatus();
-            loadPosts(); // 로그인 여부와 관계없이 마커 조회
+            loadPosts();
         });
 
         function hideError() {
@@ -1333,8 +1449,8 @@
         }
 
         window.onload = function() {
-            updateLoginStatus();  // 로그인 상태만 UI에 표시
-            initMap();            // 로그인 여부와 관계없이 지도 초기화
+            updateLoginStatus();
+            initMap();
         };
         
         function logout() {
@@ -1342,25 +1458,25 @@
             localStorage.removeItem('username');
             localStorage.removeItem('user');
             alert('로그아웃되었습니다.');
-            window.location.href = '/index.html';  // ✅ index.html에 유지
+            window.location.href = '/index.html';
         }
 
-    function updateLoginStatus() {
-        const username = localStorage.getItem('username');
-        const userInfoDiv = document.getElementById('userInfo');
-        
-        if (username) {
-            userInfoDiv.innerHTML = `
-                <span class="username">${username}님</span>
-                <button class="btn-logout" onclick="logout()">로그아웃</button>
-            `;
-        } else {
-            userInfoDiv.innerHTML = `
-                <span class="username">마커 생성은 로그인 필요</span>
-                <button class="btn-login" onclick="window.location.href='/login.html'">로그인</button>
-            `;
+        function updateLoginStatus() {
+            const username = localStorage.getItem('username');
+            const userInfoDiv = document.getElementById('userInfo');
+            
+            if (username) {
+                userInfoDiv.innerHTML = `
+                    <span class="username">${username}님</span>
+                    <button class="btn-logout" onclick="logout()">로그아웃</button>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <span class="username">마커 생성은 로그인 필요</span>
+                    <button class="btn-login" onclick="window.location.href='/login.html'">로그인</button>
+                `;
+            }
         }
-    }
     </script>
 </body>
 </html>
