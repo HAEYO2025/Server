@@ -66,6 +66,12 @@ public class ScenarioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/share")
+    public ResponseEntity<Void> shareScenario(@PathVariable Long id) {
+        scenarioService.incrementShareCount(id);
+        return ResponseEntity.noContent().build();
+    }
+
     private User getUserFromUserDetails(JwtUserDetails userDetails) {
         if (userDetails == null) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "인증이 필요합니다.");

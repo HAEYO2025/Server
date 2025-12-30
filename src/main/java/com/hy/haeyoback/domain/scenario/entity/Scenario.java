@@ -49,6 +49,8 @@ public class Scenario {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    private Integer shareCount = 0;
+
     @Builder
     public Scenario(String title, String description, String address, Double latitude, Double longitude, LocalDateTime startTime, User user) {
         this.title = title;
@@ -67,5 +69,9 @@ public class Scenario {
         this.latitude = latitude;
         this.longitude = longitude;
         this.startTime = startTime;
+    }
+
+    public void incrementShareCount() {
+        this.shareCount++;
     }
 }

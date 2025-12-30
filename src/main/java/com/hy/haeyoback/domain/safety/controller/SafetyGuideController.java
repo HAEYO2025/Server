@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/safety/guides")
+@RequestMapping("/api/safety-guides")
 @Validated
 public class SafetyGuideController {
 
@@ -46,5 +46,11 @@ public class SafetyGuideController {
     public ApiResponse<SafetyGuideDetailResponse> getGuideById(@PathVariable @Positive Long id) {
         SafetyGuideDetailResponse guide = safetyGuideService.getGuideById(id);
         return ApiResponse.success(guide);
+    }
+
+    @PostMapping("/{id}/share")
+    public ResponseEntity<Void> shareGuide(@PathVariable Long id) {
+        safetyGuideService.incrementShareCount(id);
+        return ResponseEntity.noContent().build();
     }
 }
