@@ -29,7 +29,7 @@ public class ScenarioResponseDto {
         this.latitude = scenario.getLatitude();
         this.longitude = scenario.getLongitude();
         this.startTime = scenario.getStartTime();
-        this.user = new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail());
+        this.user = (scenario.getUser() != null) ? new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail()) : null;
         this.shareCount = scenario.getShareCount();
         this.createdAt = scenario.getCreatedAt();
         this.updatedAt = scenario.getUpdatedAt();
