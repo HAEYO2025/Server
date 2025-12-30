@@ -1,5 +1,6 @@
 package com.hy.haeyoback.entity;
 
+import com.hy.haeyoback.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

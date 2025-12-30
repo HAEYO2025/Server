@@ -50,6 +50,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/posts/**", "/api/posts").permitAll()
+                        .requestMatchers("/api/vworld/**").permitAll()
+                        .requestMatchers("/api/geocoding/**").permitAll()
+                        .requestMatchers("/", "/login.html", "/signup.html", "/index.html", "/map.html").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/scenarios", "/api/scenarios/**").permitAll()

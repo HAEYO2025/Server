@@ -3,9 +3,9 @@ package com.hy.haeyoback.service;
 import com.hy.haeyoback.dto.CreatePostRequest;
 import com.hy.haeyoback.dto.PostResponse;
 import com.hy.haeyoback.entity.Post;
-import com.hy.haeyoback.entity.User;
 import com.hy.haeyoback.repository.PostRepository;
-import com.hy.haeyoback.repository.UserRepository;
+import com.hy.haeyoback.user.entity.User;
+import com.hy.haeyoback.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -73,6 +73,19 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> getAllPosts() {
         return postRepository.findAll().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 내 게시물 조회
+     */
+    @Transactional(readOnly = true)
+    public List<PostResponse> getMyPosts(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
+
+        return postRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }

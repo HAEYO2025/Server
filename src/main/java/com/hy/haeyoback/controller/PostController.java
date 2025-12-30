@@ -60,6 +60,25 @@ public class PostController {
         List<PostResponse> posts = postService.getAllPosts();
         return ResponseEntity.ok(posts);
     }
+
+    /**
+     * 내 게시물 조회 (로그인 필요)
+     * GET /api/posts/me
+     */
+    @GetMapping("/me")
+    public ResponseEntity<?> getMyPosts(
+            @RequestHeader(value = "X-Username", required = false) String username) {
+
+        if (username == null || username.isEmpty()) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "로그인이 필요한 기능입니다");
+            error.put("requireLogin", true);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        }
+
+        List<PostResponse> posts = postService.getMyPosts(username);
+        return ResponseEntity.ok(posts);
+    }
     
     /**
      * 게시물 상세 조회 (로그인 불필요)

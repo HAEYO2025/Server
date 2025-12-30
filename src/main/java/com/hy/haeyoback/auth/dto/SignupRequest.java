@@ -14,6 +14,9 @@ public class SignupRequest {
     @Email(message = "Email must be valid")
     private String email;
 
+    @NotBlank(message = "Username is required")
+    private String username;
+
     @NotBlank(message = "Password is required")
     @ValidPassword
     private String password;

@@ -37,7 +37,9 @@ public class ScenarioResponseDto {
         this.history = scenario.getHistory().stream()
                 .map(TurnHistoryResponse::new)
                 .toList();
-        this.user = (scenario.getUser() != null) ? new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail()) : null;
+        this.user = (scenario.getUser() != null)
+                ? new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail(), scenario.getUser().getUsername())
+                : null;
         this.createdAt = scenario.getCreatedAt();
         this.updatedAt = scenario.getUpdatedAt();
     }
@@ -99,7 +101,9 @@ public class ScenarioResponseDto {
             this.longitude = scenario.getLongitude();
             this.startTime = scenario.getStartTime();
             this.report = (scenario.getReport() != null) ? new ReportResponse(scenario.getReport()) : null;
-            this.user = (scenario.getUser() != null) ? new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail()) : null;
+            this.user = (scenario.getUser() != null)
+                    ? new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail(), scenario.getUser().getUsername())
+                    : null;
             this.createdAt = scenario.getCreatedAt();
             this.updatedAt = scenario.getUpdatedAt();
         }

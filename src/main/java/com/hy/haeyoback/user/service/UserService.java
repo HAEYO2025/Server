@@ -19,14 +19,17 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserResponse signup(String email, String password) {
+    public UserResponse signup(String email, String username, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new CustomException(ErrorCode.VALIDATION_ERROR, "Email already exists");
         }
+        if (userRepository.findByUsername(username).isPresent()) {
+            throw new CustomException(ErrorCode.VALIDATION_ERROR, "Username already exists");
+        }
 
-        User user = new User(email, passwordEncoder.encode(password));
+        User user = new User(email, username, passwordEncoder.encode(password));
         User saved = userRepository.save(user);
-        return new UserResponse(saved.getId(), saved.getEmail());
+        return new UserResponse(saved.getId(), saved.getEmail(), saved.getUsername());
     }
 
     public User authenticate(String email, String password) {
@@ -39,8 +42,8 @@ public class UserService {
         return user;
     }
 
-    public User authenticateById(Long userId, String password) {
-        User user = userRepository.findById(userId).orElse(null);
+    public User authenticateByUsername(String username, String password) {
+        User user = userRepository.findByUsername(username).orElse(null);
 
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
@@ -52,7 +55,7 @@ public class UserService {
     public UserResponse getUserResponse(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "User not found"));
-        return new UserResponse(user.getId(), user.getEmail());
+        return new UserResponse(user.getId(), user.getEmail(), user.getUsername());
     }
 
     public User getUserEntity(Long userId) {
