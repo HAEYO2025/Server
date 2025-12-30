@@ -191,9 +191,10 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // 토큰 저장
-                    localStorage.setItem('token', data.token);
+                    // ✅ username만 저장 (token 필드가 없으므로)
                     localStorage.setItem('username', data.username);
+                    
+                    console.log('로그인 성공! username 저장:', data.username);
                     
                     // 지도 페이지로 이동
                     window.location.href = '/index.html';
@@ -203,6 +204,7 @@
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {
+                console.error('로그인 오류:', error);
                 errorMessage.textContent = '서버 연결에 실패했습니다';
                 errorMessage.style.display = 'block';
             } finally {

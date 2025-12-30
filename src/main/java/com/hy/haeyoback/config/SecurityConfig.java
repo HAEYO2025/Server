@@ -30,16 +30,25 @@ public class SecurityConfig {
                 // 인증 관련 API는 모두 허용
                 .requestMatchers("/api/auth/**").permitAll()
                 
-                // POST 요청 (마커 생성)은 인증 필요
-                .requestMatchers("/api/posts").authenticated()
-                
                 // GET 요청 (마커 조회)는 모두 허용
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts").permitAll()
+                
+                // POST 요청 (마커 생성)은 permitAll로 설정하고 컨트롤러에서 헤더 체크
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/posts").permitAll()
+                
+                // PATCH, DELETE 등 나머지 요청도 모두 허용 (컨트롤러에서 체크)
                 .requestMatchers("/api/posts/**").permitAll()
+                
+                // VWorld 프록시 API
+                .requestMatchers("/api/vworld/**").permitAll()
+                
+                // Geocoding API
+                .requestMatchers("/api/geocoding/**").permitAll()
                 
                 // 정적 리소스 허용 (HTML 페이지 모두 접근 가능)
                 .requestMatchers("/", "/login.html", "/signup.html", "/index.html", "/map.html").permitAll()
                 .requestMatchers("/uploads/**").permitAll()
-                .requestMatchers("/api/geocoding/**").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
                 
                 .anyRequest().permitAll()

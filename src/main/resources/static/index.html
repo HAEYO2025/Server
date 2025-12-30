@@ -668,18 +668,7 @@
             loadPosts();
         }
 
-        function handleMapClick(event) {
-            const feature = map.forEachFeatureAtPixel(event.pixel, f => f);
-            
-            if (feature && feature.get('post')) {
-                const post = feature.get('post');
-                showPostPopup(post, event.coordinate);
-            } else {
-                const coords = ol.proj.toLonLat(event.coordinate);
-                selectedCoords = coords;
-                openPostModal(coords);
-            }
-        }
+        
 
         function showPostPopup(post, coordinate) {
             const categoryNames = {
@@ -881,20 +870,43 @@
             }
 
             try {
-                const response = await fetch(
-                    `http://api.vworld.kr/req/search?service=search&request=search&version=2.0&crs=EPSG:4326&size=10&page=1&query=${encodeURIComponent(query)}&type=place&key=${API_KEY}`
-                );
+                console.log('Kakao 검색 시작:', query);
+                
+                // Kakao API 프록시를 통해 검색
+                const response = await fetch(`/api/kakao/search?query=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    throw new Error('검색 요청 실패');
+                }
                 
                 const data = await response.json();
                 
-                if (data.response.status === 'OK' && data.response.result.items.length > 0) {
-                    displaySearchResults(data.response.result.items);
+                console.log('Kakao 검색 응답:', data);
+                
+                if (data.documents && data.documents.length > 0) {
+                    const items = data.documents;
+                    
+                    // 검색 결과가 1개면 바로 이동
+                    if (items.length === 1) {
+                        const item = items[0];
+                        const lon = parseFloat(item.x);
+                        const lat = parseFloat(item.y);
+                        moveToLocation([lon, lat]);
+                        
+                        // 주소 정보 표시
+                        const address = item.road_address_name || item.address_name || '';
+                        alert(`${item.place_name}\n${address}`);
+                    } else {
+                        // 여러 결과가 있으면 목록 표시
+                        displaySearchResults(items);
+                    }
                 } else {
-                    alert('검색 결과가 없습니다');
+                    console.log('검색 결과 없음');
+                    alert('검색 결과가 없습니다. 다른 검색어를 시도해주세요.');
                 }
             } catch (error) {
                 console.error('검색 오류:', error);
-                alert('검색 중 오류가 발생했습니다');
+                alert('검색 중 오류가 발생했습니다: ' + error.message);
             }
         }
 
@@ -906,16 +918,24 @@
             items.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'search-result-item';
+                
+                const address = item.road_address_name || item.address_name || '';
+                const category = item.category_name || '';
+                
                 div.innerHTML = `
-                    <div class="result-title">${item.title}</div>
-                    <div class="result-address">${item.address?.road || item.address?.parcel || ''}</div>
+                    <div class="result-title">${item.place_name}</div>
+                    <div class="result-address">${address}</div>
+                    ${category ? `<div class="result-category" style="font-size: 11px; color: #999;">${category}</div>` : ''}
                 `;
+                
                 div.onclick = () => {
-                    const lon = parseFloat(item.point.x);
-                    const lat = parseFloat(item.point.y);
+                    const lon = parseFloat(item.x);
+                    const lat = parseFloat(item.y);
                     moveToLocation([lon, lat]);
                     resultsDiv.style.display = 'none';
+                    document.getElementById('searchInput').value = item.place_name;
                 };
+                
                 resultsDiv.appendChild(div);
             });
         }
@@ -927,8 +947,21 @@
                 zoom: 17,
                 duration: 1000
             });
+            
+            // 위치 정보 업데이트
+            document.getElementById('latitude').textContent = coords[1].toFixed(6);
+            document.getElementById('longitude').textContent = coords[0].toFixed(6);
         }
 
+        // 검색창 외부 클릭 시 검색 결과 닫기
+        document.addEventListener('click', function(event) {
+            const searchContainer = document.querySelector('.search-container');
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (searchContainer && !searchContainer.contains(event.target)) {
+                resultsDiv.style.display = 'none';
+            }
+        });
         function startTracking() {
             if (!navigator.geolocation) {
                 showError('이 브라우저는 위치 정보를 지원하지 않습니다.');
@@ -1123,16 +1156,7 @@
         }
 
         // 마커 조회 (로그인 불필요)
-        async function loadPosts() {
-            try {
-                const response = await fetch('/api/posts');
-                const posts = await response.json();
-                return posts;
-            } catch (error) {
-                console.error('Error loading posts:', error);
-                return [];
-            }
-        }
+        
 
         // 영역 내 마커 조회 (로그인 불필요)
         async function loadPostsInBounds(bounds) {
@@ -1154,15 +1178,33 @@
         }
 
         // 지도 클릭 이벤트 핸들러 예제
-        function handleMapClick(lat, lng) {
-            if (!isLoggedIn()) {
-                // 로그인하지 않은 경우 안내 메시지
-                showLoginPrompt();
-                return;
-            }
+        function handleMapClick(event) {
+            const feature = map.forEachFeatureAtPixel(event.pixel, f => f);
             
-            // 로그인한 경우 마커 생성 폼 표시
-            showCreatePostForm(lat, lng);
+            if (feature && feature.get('post')) {
+                // 기존 마커 클릭 - 팝업 표시
+                const post = feature.get('post');
+                showPostPopup(post, event.coordinate);
+            } else {
+                // 빈 곳 클릭 - 로그인 확인
+                const username = localStorage.getItem('username');
+                
+                console.log('지도 클릭! username:', username);
+                console.log('localStorage 전체:', localStorage);
+                
+                if (!username) {
+                    if (confirm('마커를 생성하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
+                        window.location.href = '/login.html';
+                    }
+                    return;
+                }
+                
+                // 로그인 되어있으면 마커 생성 모달 열기
+                console.log('로그인 확인됨! 모달 열기');
+                const coords = ol.proj.toLonLat(event.coordinate);
+                selectedCoords = coords;
+                openPostModal(coords);
+            }
         }
 
         // 로그인 유도 메시지 표시
