@@ -16,8 +16,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,8 +45,7 @@ public class AuthController {
             AuthService authService,
             UserService userService,
             JwtProvider jwtProvider,
-            CookieProperties cookieProperties
-    ) {
+            CookieProperties cookieProperties) {
         this.authService = authService;
         this.userService = userService;
         this.jwtProvider = jwtProvider;
@@ -57,7 +63,7 @@ public class AuthController {
         return ApiResponse.successMessage("Signup successful");
     }
 
-    @Operation(summary = "로그인", description = "아이디와 비밀번호로 로그인하고 토큰을 발급받습니다.")
+    @Operation(summary = "로그인", description = "사용자 ID와 비밀번호로 로그인하고 토큰을 발급받습니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
@@ -65,9 +71,9 @@ public class AuthController {
     @PostMapping("/login")
     public ApiResponse<Void> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletResponse response
-    ) {
-        AuthTokens tokens = authService.login(request.getUsername(), request.getPassword());
+            HttpServletResponse response) {
+        Long userId = parseUserId(request.getUsername());
+        AuthTokens tokens = authService.login(userId, request.getPassword());
         setRefreshTokenCookie(response, tokens.getRefreshToken());
         response.setHeader("Authorization", "Bearer " + tokens.getAccessToken());
         return ApiResponse.successMessage("Login successful");
@@ -81,8 +87,7 @@ public class AuthController {
     @PostMapping("/refresh")
     public ApiResponse<Void> refresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
-            HttpServletResponse response
-    ) {
+            HttpServletResponse response) {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new CustomException(ErrorCode.UNAUTHORIZED, "Refresh token is required");
         }
@@ -99,13 +104,33 @@ public class AuthController {
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
-            HttpServletResponse response
-    ) {
+            HttpServletResponse response) {
         if (refreshToken != null && !refreshToken.isBlank()) {
             authService.logout(refreshToken);
         }
         clearRefreshTokenCookie(response);
         return ApiResponse.successMessage("Logout successful");
+    }
+
+    @Operation(summary = "인증 확인", description = "현재 사용자의 인증 상태를 확인합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증 상태 반환")
+    })
+    @GetMapping("/check")
+    public ResponseEntity<Map<String, Object>> checkAuth() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication.getPrincipal().equals("anonymousUser")) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("authenticated", false);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("authenticated", true);
+        response.put("username", authentication.getName());
+        return ResponseEntity.ok(response);
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
@@ -133,5 +158,13 @@ public class AuthController {
                 .maxAge(0)
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private Long parseUserId(String value) {
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException ex) {
+            throw new CustomException(ErrorCode.VALIDATION_ERROR, "Username must be a numeric id");
+        }
     }
 }

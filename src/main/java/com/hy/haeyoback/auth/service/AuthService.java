@@ -23,15 +23,15 @@ public class AuthService {
     public AuthService(
             UserService userService,
             JwtProvider jwtProvider,
-            RefreshTokenRepository refreshTokenRepository
-    ) {
+            RefreshTokenRepository refreshTokenRepository) {
         this.userService = userService;
         this.jwtProvider = jwtProvider;
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public AuthTokens login(String username, String password) {
-        User user = userService.authenticate(username, password);
+    @Transactional
+    public AuthTokens login(Long userId, String password) {
+        User user = userService.authenticateById(userId, password);
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtProvider.generateRefreshToken(user.getId());
@@ -40,6 +40,7 @@ public class AuthService {
         return new AuthTokens(accessToken, refreshToken);
     }
 
+    @Transactional
     public AuthTokens refresh(String refreshToken) {
         JwtProvider.RefreshTokenInfo info = jwtProvider.parseRefreshToken(refreshToken);
         Long userId = info.userId();
@@ -56,11 +57,11 @@ public class AuthService {
         return new AuthTokens(newAccessToken, newRefreshToken);
     }
 
+    @Transactional
     public void logout(String refreshToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
 
-    @Transactional
     private void saveRefreshToken(Long userId, String refreshToken, Instant expiresAt) {
         RefreshToken token = refreshTokenRepository.findByUserId(userId)
                 .orElse(null);

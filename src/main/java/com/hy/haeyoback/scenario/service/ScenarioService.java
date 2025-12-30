@@ -1,5 +1,6 @@
 package com.hy.haeyoback.scenario.service;
 
+import com.hy.haeyoback.scenario.dto.ScenarioCreateRequestDto;
 import com.hy.haeyoback.scenario.dto.ScenarioRequestDto;
 import com.hy.haeyoback.scenario.dto.ScenarioResponseDto;
 import com.hy.haeyoback.scenario.entity.Scenario;
@@ -22,8 +23,26 @@ public class ScenarioService {
     private final ScenarioRepository scenarioRepository;
 
     @Transactional
-    public Long createScenario(ScenarioRequestDto requestDto, User user) {
+    public Long createScenario(ScenarioCreateRequestDto requestDto, User user) {
         Scenario scenario = requestDto.toEntity(user);
+        ScenarioCreateRequestDto.ReportPayload reportPayload = requestDto.getReport();
+        com.hy.haeyoback.scenario.entity.Report report = new com.hy.haeyoback.scenario.entity.Report(
+                scenario,
+                reportPayload.getTitle(),
+                reportPayload.getDescription(),
+                reportPayload.getLongitude(),
+                reportPayload.getLatitude(),
+                requestDto.parseReportedDate()
+        );
+        scenario.setReport(report);
+        requestDto.getHistory().forEach(history ->
+                scenario.addHistory(
+                        history.getSituation(),
+                        history.getChoice(),
+                        history.getSurvivalRate(),
+                        history.getComment()
+                )
+        );
         Scenario savedScenario = scenarioRepository.save(scenario);
         return savedScenario.getId();
     }
@@ -31,6 +50,12 @@ public class ScenarioService {
     public List<ScenarioResponseDto> getAllScenarios() {
         return scenarioRepository.findAllByOrderByCreatedAtDesc().stream()
                 .map(ScenarioResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<ScenarioResponseDto.ScenarioSummaryResponse> getMyScenarios(User user) {
+        return scenarioRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId()).stream()
+                .map(ScenarioResponseDto.ScenarioSummaryResponse::new)
                 .collect(Collectors.toList());
     }
 
