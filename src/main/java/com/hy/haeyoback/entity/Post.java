@@ -10,6 +10,8 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "posts", indexes = {
@@ -60,4 +62,21 @@ public class Post {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostReaction> reactions = new ArrayList<>();
+
+    // 좋아요/싫어요 카운트 메서드
+    public long getLikeCount() {
+        return reactions.stream()
+                .filter(r -> r.getReactionType() == PostReaction.ReactionType.LIKE)
+                .count();
+    }
+
+    public long getDislikeCount() {
+        return reactions.stream()
+                .filter(r -> r.getReactionType() == PostReaction.ReactionType.DISLIKE)
+                .count();
+    }
 }
