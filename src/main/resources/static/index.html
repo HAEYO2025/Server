@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 위치 추적 - 해요</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.5.2/ol.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 { font-size: 24px; font-weight: 600; }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .username { color: white; font-weight: 600; }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
+        
+        #map { flex: 1; width: 100%; cursor: crosshair; }
+        
+        .control-panel {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .search-container { margin-bottom: 15px; }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-box button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .search-box button:hover { background: #5568d3; }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.active {
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.inactive { background-color: #f44336; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-start:hover { transform: translateY(-2px); }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-center {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-banner {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover { background: #f8f9fa; }
+        .search-result-item:last-child { border-bottom: none; }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .result-address {
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* 게시물 작성 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .category-btn {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .category-btn:hover { border-color: #667eea; }
+
+        .category-btn.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .category-icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .category-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .image-upload {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .image-upload input { display: none; }
+
+        .image-preview {
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 게시물 팝업 */
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            bottom: 12px;
+            left: -50px;
+            min-width: 250px;
+        }
+        
+        .ol-popup:after, .ol-popup:before {
+            top: 100%;
+            border: solid transparent;
+            content: " ";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        .ol-popup:after {
+            border-top-color: white;
+            border-width: 10px;
+            left: 48px;
+            margin-left: -10px;
+        }
+        
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+            font-size: 20px;
+            color: #999;
+        }
+        
+        .ol-popup-closer:after {
+            content: "✖";
+        }
+
+        .popup-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .popup-category.TRASH {
+            background: #ffe5e5;
+            color: #d32f2f;
+        }
+
+        .popup-category.DAMAGE {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .popup-category.WILDLIFE {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .popup-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .popup-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .popup-address {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .popup-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        /* 좋아요/싫어요 버튼 스타일 */
+        .popup-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .reaction-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .reaction-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .reaction-btn.like {
+            color: #4CAF50;
+            border-color: #4CAF50;
+        }
+
+        .reaction-btn.like:hover {
+            background: #f1f8f4;
+        }
+
+        .reaction-btn.like.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .reaction-btn.dislike {
+            color: #f44336;
+            border-color: #f44336;
+        }
+
+        .reaction-btn.dislike:hover {
+            background: #fef1f0;
+        }
+
+        .reaction-btn.dislike.active {
+            background: #f44336;
+            color: white;
+        }
+
+        .reaction-count {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .location-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls { flex-direction: column; }
+            .button-group { width: 100%; }
+            button { flex: 1; }
+            .category-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📍 실시간 위치 추적</h1>
+            <div class="user-info">
+                <span class="username" id="userInfo"></span>
+                
+            </div>
+        </div>
+    </div>
+    
+    <div id="error" class="error-banner"></div>
+    
+    <div id="map"></div>
+    
+    <div class="control-panel">
+        <div class="search-container">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 장소, 건물명, 주소를 검색하세요"
+                    onkeypress="if(event.key==='Enter') searchPlace()"
+                />
+                <button onclick="searchPlace()">검색</button>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+
+        <div class="location-info">
+            <div class="info-card">
+                <div class="info-label">위도</div>
+                <div class="info-value" id="latitude">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">경도</div>
+                <div class="info-value" id="longitude">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">정확도</div>
+                <div class="info-value" id="accuracy">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">업데이트</div>
+                <div class="info-value" id="lastUpdate">-</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="status">
+                <div class="status-dot inactive" id="statusDot"></div>
+                <span id="statusText">위치 추적 중지됨</span>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-start" id="startBtn" onclick="startTracking()">
+                    🎯 추적 시작
+                </button>
+                <button class="btn-stop" id="stopBtn" onclick="stopTracking()" style="display: none;">
+                    ⏸️ 추적 중지
+                </button>
+                <button class="btn-center" id="centerBtn" onclick="centerMap()" disabled>
+                    📌 내 위치로
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게시물 작성 모달 -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📝 게시물 작성</h2>
+                <button class="btn-close" onclick="closePostModal()">&times;</button>
+            </div>
+            
+            <form id="postForm">
+                <div class="form-group">
+                    <label>카테고리 선택</label>
+                    <div class="category-grid">
+                        <div class="category-btn" data-category="TRASH">
+                            <div class="category-icon">🗑️</div>
+                            <div class="category-name">쓰레기</div>
+                        </div>
+                        <div class="category-btn" data-category="DAMAGE">
+                            <div class="category-icon">⚠️</div>
+                            <div class="category-name">기물파손</div>
+                        </div>
+                        <div class="category-btn" data-category="WILDLIFE">
+                            <div class="category-icon">🦋</div>
+                            <div class="category-name">생물</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>설명</label>
+                    <textarea id="postDescription" placeholder="상세 설명을 입력하세요..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>사진 첨부</label>
+                    <div class="image-upload" onclick="document.getElementById('imageInput').click()">
+                        <div>📷 사진을 선택하세요</div>
+                        <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
+                    </div>
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="미리보기">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">게시하기</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.5.2/dist/ol.js"></script>
+    <script>
+        const API_KEY = 'C52BE737-A08C-392F-978D-57BF695EEC19';
+        let map, marker, markerLayer, pathLayer, postLayer;
+        let watchId = null;
+        let isTracking = false;
+        let currentPosition = null;
+        let path = [];
+        let selectedCategory = null;
+        let selectedCoords = null;
+        let selectedImageBase64 = null;
+        let overlay;
+
+        function initMap() {
+            markerLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+            pathLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+            postLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+
+            const baseLayer = new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: `http://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Base/{z}/{y}/{x}.png`
+                })
+            });
+
+            const container = document.createElement('div');
+            container.className = 'ol-popup';
+            container.innerHTML = '<a href="#" class="ol-popup-closer"></a><div id="popup-content"></div>';
+            
+            overlay = new ol.Overlay({
+                element: container,
+                autoPan: true,
+                autoPanAnimation: { duration: 250 }
+            });
+
+            map = new ol.Map({
+                target: 'map',
+                layers: [baseLayer, pathLayer, postLayer, markerLayer],
+                overlays: [overlay],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([129.0756, 35.1796]),
+                    zoom: 13
+                })
+            });
+
+            createMarker([129.0756, 35.1796]);
+            map.on('click', handleMapClick);
+            
+            container.querySelector('.ol-popup-closer').onclick = function() {
+                overlay.setPosition(undefined);
+                this.blur();
+                return false;
+            };
+
+            loadPosts();
+        }
+
+        function showPostPopup(post, coordinate) {
+            const categoryNames = {
+                'TRASH': '쓰레기',
+                'DAMAGE': '기물파손',
+                'WILDLIFE': '생물'
+            };
+            
+            let content = `
+                <div class="popup-category ${post.category}">${categoryNames[post.category]}</div>
+            `;
+            
+            if (post.imageUrl) {
+                content += `<img src="${post.imageUrl}" class="popup-image" alt="게시물 이미지">`;
+            }
+            
+            if (post.description) {
+                content += `<div class="popup-description">${post.description}</div>`;
+            }
+            
+            if (post.address) {
+                content += `<div class="popup-address">📍 ${post.address}</div>`;
+            }
+            
+            content += `
+                <div class="popup-meta">
+                    <span>👤 ${post.username}</span>
+                    <span>🕐 ${post.createdAt}</span>
+                </div>
+                <div class="popup-actions">
+                    <button class="reaction-btn like ${getUserReaction(post.id) === 'like' ? 'active' : ''}" 
+                            onclick="handleReaction('${post.id}', 'like')">
+                        👍 <span class="reaction-count">${post.likes || 0}</span>
+                    </button>
+                    <button class="reaction-btn dislike ${getUserReaction(post.id) === 'dislike' ? 'active' : ''}" 
+                            onclick="handleReaction('${post.id}', 'dislike')">
+                        👎 <span class="reaction-count">${post.dislikes || 0}</span>
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('popup-content').innerHTML = content;
+            overlay.setPosition(coordinate);
+        }
+
+        // 사용자의 반응 상태를 가져오는 함수
+        function getUserReaction(postId) {
+            const reactions = JSON.parse(localStorage.getItem('userReactions') || '{}');
+            return reactions[postId] || null;
+        }
+
+        // 사용자의 반응 상태를 저장하는 함수
+        function saveUserReaction(postId, reactionType) {
+            const reactions = JSON.parse(localStorage.getItem('userReactions') || '{}');
+            reactions[postId] = reactionType;
+            localStorage.setItem('userReactions', JSON.stringify(reactions));
+        }
+
+        // 좋아요/싫어요 처리 함수
+        async function handleReaction(postId, reactionType) {
+            const username = localStorage.getItem('username');
+            
+            if (!username) {
+                alert('좋아요/싫어요는 로그인이 필요합니다.');
+                return;
+            }
+
+            const currentReaction = getUserReaction(postId);
+            
+            // 같은 버튼을 다시 누르면 취소
+            const newReactionType = currentReaction === reactionType ? null : reactionType;
+
+            try {
+                const response = await fetch(`/api/posts/${postId}/reaction`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': username
+                    },
+                    body: JSON.stringify({
+                        reactionType: newReactionType
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // 로컬스토리지에 반응 상태 저장
+                    if (newReactionType) {
+                        saveUserReaction(postId, newReactionType);
+                    } else {
+                        const reactions = JSON.parse(localStorage.getItem('userReactions') || '{}');
+                        delete reactions[postId];
+                        localStorage.setItem('userReactions', JSON.stringify(reactions));
+                    }
+                    
+                    // 게시물 목록 새로고침
+                    loadPosts();
+                    
+                    // 팝업이 열려있으면 팝업도 업데이트
+                    const overlayPosition = overlay.getPosition();
+                    if (overlayPosition) {
+                        const posts = await fetch('/api/posts').then(r => r.json());
+                        const updatedPost = posts.find(p => p.id === postId);
+                        if (updatedPost) {
+                            showPostPopup(updatedPost, overlayPosition);
+                        }
+                    }
+                } else {
+                    alert('반응 처리 중 오류가 발생했습니다.');
+                }
+            } catch (error) {
+                console.error('반응 처리 오류:', error);
+                alert('서버 연결 오류');
+            }
+        }
+
+        function openPostModal(coords) {
+            document.getElementById('postModal').classList.add('active');
+            selectedCategory = null;
+            selectedImageBase64 = null;
+            document.getElementById('postForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedCategory = this.dataset.category;
+                });
+            });
+        });
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImageBase64 = e.target.result;
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedCategory) {
+                alert('카테고리를 선택해주세요');
+                return;
+            }
+
+            const description = document.getElementById('postDescription').value;
+            const username = localStorage.getItem('username');
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '게시 중...';
+
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': username
+                    },
+                    body: JSON.stringify({
+                        latitude: selectedCoords[1],
+                        longitude: selectedCoords[0],
+                        category: selectedCategory,
+                        description: description,
+                        imageBase64: selectedImageBase64
+                    })
+                });
+
+                if (response.ok) {
+                    alert('게시물이 작성되었습니다!');
+                    closePostModal();
+                    loadPosts();
+                } else {
+                    const error = await response.json();
+                    alert('게시물 작성 실패: ' + error.error);
+                }
+            } catch (error) {
+                alert('서버 연결 오류');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '게시하기';
+            }
+        });
+
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/posts');
+                const posts = await response.json();
+
+                const postSource = postLayer.getSource();
+                postSource.clear();
+
+                posts.forEach(post => {
+                    createPostMarker(post);
+                });
+            } catch (error) {
+                console.error('게시물 로드 오류:', error);
+            }
+        }
+
+        function createPostMarker(post) {
+            const categoryIcons = {
+                'TRASH': '🗑️',
+                'DAMAGE': '⚠️',
+                'WILDLIFE': '🦋'
+            };
+
+            const categoryColors = {
+                'TRASH': '#d32f2f',
+                'DAMAGE': '#f57c00',
+                'WILDLIFE': '#388e3c'
+            };
+
+            const icon = categoryIcons[post.category] || '📍';
+            const color = categoryColors[post.category] || '#667eea';
+
+            const feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([post.longitude, post.latitude])),
+                post: post
+            });
+
+            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" viewBox="0 0 40 50">
+                <path d="M20 0C11.163 0 4 7.163 4 16c0 12 16 34 16 34s16-22 16-34c0-8.837-7.163-16-16-16z" fill="${color}"/>
+                <text x="20" y="20" text-anchor="middle" font-size="18" fill="white">${icon}</text>
+            </svg>`;
+
+            feature.setStyle(new ol.style.Style({
+                image: new ol.style.Icon({
+                    anchor: [0.5, 1],
+                    scale: 0.8,
+                    src: 'data:image/svg+xml;utf8,' + encodeURIComponent(svgIcon)
+                })
+            }));
+
+            postLayer.getSource().addFeature(feature);
+        }
+
+        function createMarker(coords) {
+            const markerSource = markerLayer.getSource();
+            markerSource.clear();
+
+            marker = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(coords))
+            });
+
+            marker.setStyle(new ol.style.Style({
+                image: new ol.style.Icon({
+                    anchor: [0.5, 1],
+                    scale: 0.8,
+                    src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%23667eea" stroke="white" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>'
+                })
+            }));
+
+            markerSource.addFeature(marker);
+        }
+
+        async function searchPlace() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('검색어를 입력해주세요');
+                return;
+            }
+
+            try {
+                console.log('Kakao 검색 시작:', query);
+                
+                const response = await fetch(`/api/kakao/search?query=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    throw new Error('검색 요청 실패');
+                }
+                
+                const data = await response.json();
+                
+                console.log('Kakao 검색 응답:', data);
+                
+                if (data.documents && data.documents.length > 0) {
+                    const items = data.documents;
+                    
+                    if (items.length === 1) {
+                        const item = items[0];
+                        const lon = parseFloat(item.x);
+                        const lat = parseFloat(item.y);
+                        moveToLocation([lon, lat]);
+                        
+                        const address = item.road_address_name || item.address_name || '';
+                        alert(`${item.place_name}\n${address}`);
+                    } else {
+                        displaySearchResults(items);
+                    }
+                } else {
+                    console.log('검색 결과 없음');
+                    alert('검색 결과가 없습니다. 다른 검색어를 시도해주세요.');
+                }
+            } catch (error) {
+                console.error('검색 오류:', error);
+                alert('검색 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        function displaySearchResults(items) {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'block';
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                
+                const address = item.road_address_name || item.address_name || '';
+                const category = item.category_name || '';
+                
+                div.innerHTML = `
+                    <div class="result-title">${item.place_name}</div>
+                    <div class="result-address">${address}</div>
+                    ${category ? `<div class="result-category" style="font-size: 11px; color: #999;">${category}</div>` : ''}
+                `;
+                
+                div.onclick = () => {
+                    const lon = parseFloat(item.x);
+                    const lat = parseFloat(item.y);
+                    moveToLocation([lon, lat]);
+                    resultsDiv.style.display = 'none';
+                    document.getElementById('searchInput').value = item.place_name;
+                };
+                
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        function moveToLocation(coords) {
+            createMarker(coords);
+            map.getView().animate({
+                center: ol.proj.fromLonLat(coords),
+                zoom: 17,
+                duration: 1000
+            });
+            
+            document.getElementById('latitude').textContent = coords[1].toFixed(6);
+            document.getElementById('longitude').textContent = coords[0].toFixed(6);
+        }
+
+        document.addEventListener('click', function(event) {
+            const searchContainer = document.querySelector('.search-container');
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (searchContainer && !searchContainer.contains(event.target)) {
+                resultsDiv.style.display = 'none';
+            }
+        });
+
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showError('이 브라우저는 위치 정보를 지원하지 않습니다.');
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                updatePosition,
+                handleError,
+                options
+            );
+
+            isTracking = true;
+            path = [];
+            pathLayer.getSource().clear();
+            updateUI();
+        }
+
+        function updatePosition(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            currentPosition = [lng, lat];
+            path.push([lng, lat]);
+
+            createMarker([lng, lat]);
+            
+            if (path.length === 1) {
+                map.getView().animate({
+                    center: ol.proj.fromLonLat([lng, lat]),
+                    zoom: 16,
+                    duration: 1000
+                });
+            }
+
+            if (path.length > 1) {
+                const pathSource = pathLayer.getSource();
+                pathSource.clear();
+
+                const lineString = new ol.geom.LineString(
+                    path.map(coord => ol.proj.fromLonLat(coord))
+                );
+
+                const pathFeature = new ol.Feature({
+                    geometry: lineString
+                });
+
+                pathFeature.setStyle(new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#667eea',
+                        width: 4
+                    })
+                }));
+
+                pathSource.addFeature(pathFeature);
+            }
+
+            document.getElementById('latitude').textContent = lat.toFixed(6);
+            document.getElementById('longitude').textContent = lng.toFixed(6);
+            document.getElementById('accuracy').textContent = accuracy.toFixed(0) + 'm';
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ko-KR');
+            document.getElementById('centerBtn').disabled = false;
+
+            hideError();
+        }
+
+        function handleError(error) {
+            let message = '';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.';
+                    stopTracking();
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = '위치 정보를 사용할 수 없습니다.';
+                    break;
+                case error.TIMEOUT:
+                    message = '위치 요청 시간이 초과되었습니다.';
+                    break;
+                default:
+                    message = '알 수 없는 오류가 발생했습니다.';
+            }
+            
+            showError(message);
+        }
+
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            isTracking = false;
+            updateUI();
+        }
+
+        function centerMap() {
+            if (currentPosition) {
+                map.getView().animate({
+                    center: ol.proj.fromLonLat(currentPosition),
+                    zoom: 16,
+                    duration: 500
+                });
+            }
+        }
+
+        function updateUI() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            if (isTracking) {
+                statusDot.classList.remove('inactive');
+                statusDot.classList.add('active');
+                statusText.textContent = '위치 추적 중';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+            } else {
+                statusDot.classList.remove('active');
+                statusDot.classList.add('inactive');
+                statusText.textContent = '위치 추적 중지됨';
+                startBtn.style.display = 'block';
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            const errorBanner = document.getElementById('error');
+            errorBanner.textContent = message;
+            errorBanner.style.display = 'block';
+        }
+
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('user');
+            return userStr ? JSON.parse(userStr) : null;
+        }
+
+        function isLoggedIn() {
+            return getCurrentUser() !== null;
+        }
+
+        async function createPost(postData) {
+            const user = getCurrentUser();
+            
+            if (!user) {
+                if (confirm('마커를 생성하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
+                    window.location.href = '/login.html';
+                }
+                return null;
+            }
+            
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': user.username
+                    },
+                    body: JSON.stringify(postData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    if (data.requireLogin) {
+                        alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+                        window.location.href = '/login.html';
+                        return null;
+                    }
+                    throw new Error(data.error || '게시물 생성 실패');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error creating post:', error);
+                alert(error.message);
+                return null;
+            }
+        }
+
+        async function loadPostsInBounds(bounds) {
+            const params = new URLSearchParams({
+                minLat: bounds.minLat,
+                maxLat: bounds.maxLat,
+                minLon: bounds.minLon,
+                maxLon: bounds.maxLon
+            });
+            
+            try {
+                const response = await fetch(`/api/posts/bounds?${params}`);
+                const posts = await response.json();
+                return posts;
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                return [];
+            }
+        }
+
+        function handleMapClick(event) {
+            const feature = map.forEachFeatureAtPixel(event.pixel, f => f);
+            
+            if (feature && feature.get('post')) {
+                const post = feature.get('post');
+                showPostPopup(post, event.coordinate);
+            } else {
+                const username = localStorage.getItem('username');
+                
+                console.log('지도 클릭! username:', username);
+                console.log('localStorage 전체:', localStorage);
+                
+                if (!username) {
+                    if (confirm('마커를 생성하려면 로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?')) {
+                        window.location.href = '/login.html';
+                    }
+                    return;
+                }
+                
+                console.log('로그인 확인됨! 모달 열기');
+                const coords = ol.proj.toLonLat(event.coordinate);
+                selectedCoords = coords;
+                openPostModal(coords);
+            }
+        }
+
+        function showLoginPrompt() {
+            const modal = document.createElement('div');
+            modal.className = 'login-prompt-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>로그인이 필요합니다</h3>
+                    <p>마커를 생성하려면 로그인해주세요.</p>
+                    <p>마커 조회는 로그인 없이도 가능합니다.</p>
+                    <div class="modal-buttons">
+                        <button onclick="window.location.href='/login.html'">로그인</button>
+                        <button onclick="this.closest('.login-prompt-modal').remove()">취소</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function showCreatePostForm(lat, lng) {
+            const modal = document.createElement('div');
+            modal.className = 'create-post-modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3>마커 생성</h3>
+                    <form id="createPostForm">
+                        <input type="hidden" name="latitude" value="${lat}">
+                        <input type="hidden" name="longitude" value="${lng}">
+                        
+                        <label>카테고리:</label>
+                        <select name="category" required>
+                            <option value="TRASH">쓰레기</option>
+                            <option value="DAMAGE">시설물 파손</option>
+                            <option value="WILDLIFE">야생동물</option>
+                        </select>
+                        
+                        <label>설명:</label>
+                        <textarea name="description" rows="4"></textarea>
+                        
+                        <label>사진:</label>
+                        <input type="file" accept="image/*" id="imageInput">
+                        
+                        <div class="modal-buttons">
+                            <button type="submit">생성</button>
+                            <button type="button" onclick="this.closest('.create-post-modal').remove()">취소</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            document.getElementById('createPostForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                const postData = {
+                    latitude: parseFloat(formData.get('latitude')),
+                    longitude: parseFloat(formData.get('longitude')),
+                    category: formData.get('category'),
+                    description: formData.get('description')
+                };
+                
+                const imageFile = document.getElementById('imageInput').files[0];
+                if (imageFile) {
+                    postData.imageBase64 = await fileToBase64(imageFile);
+                }
+                
+                const result = await createPost(postData);
+                if (result) {
+                    alert('마커가 생성되었습니다!');
+                    modal.remove();
+                    loadPosts();
+                }
+            });
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function updateLoginStatus() {
+            const user = getCurrentUser();
+            const loginStatusElement = document.getElementById('loginStatus');
+            
+            if (user) {
+                loginStatusElement.innerHTML = `
+                    <span>환영합니다, ${user.username}님</span>
+                    <button onclick="logout()">로그아웃</button>
+                `;
+            } else {
+                loginStatusElement.innerHTML = `
+                    <span>마커 생성은 로그인이 필요합니다</span>
+                    <button onclick="window.location.href='/login.html'">로그인</button>
+                `;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            alert('로그아웃되었습니다.');
+            window.location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateLoginStatus();
+            loadPosts();
+        });
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        window.onload = function() {
+            updateLoginStatus();
+            initMap();
+        };
+        
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('user');
+            alert('로그아웃되었습니다.');
+            window.location.href = '/index.html';
+        }
+
+        function updateLoginStatus() {
+            const username = localStorage.getItem('username');
+            const userInfoDiv = document.getElementById('userInfo');
+            
+            if (username) {
+                userInfoDiv.innerHTML = `
+                    <span class="username">${username}님</span>
+                    <button class="btn-logout" onclick="logout()">로그아웃</button>
+                `;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <span class="username">마커 생성은 로그인 필요</span>
+                    <button class="btn-login" onclick="window.location.href='/login.html'">로그인</button>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
