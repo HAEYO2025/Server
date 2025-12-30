@@ -2,10 +2,8 @@ package com.hy.haeyoback.domain.auth.controller;
 
 import com.hy.haeyoback.domain.auth.dto.AuthTokens;
 import com.hy.haeyoback.domain.auth.dto.LoginRequest;
-import com.hy.haeyoback.domain.auth.dto.LoginResponse;
 import com.hy.haeyoback.domain.auth.dto.SignupRequest;
 import com.hy.haeyoback.domain.auth.service.AuthService;
-import com.hy.haeyoback.domain.user.dto.UserResponse;
 import com.hy.haeyoback.domain.user.service.UserService;
 import com.hy.haeyoback.global.api.ApiResponse;
 import com.hy.haeyoback.global.config.CookieProperties;
@@ -45,23 +43,24 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public ApiResponse<UserResponse> signup(@Valid @RequestBody SignupRequest request) {
-        UserResponse response = userService.signup(request.getEmail(), request.getUsername(), request.getPassword());
-        return ApiResponse.success(response);
+    public ApiResponse<Void> signup(@Valid @RequestBody SignupRequest request) {
+        userService.signup(request.getEmail(), request.getPassword());
+        return ApiResponse.successMessage("Signup successful");
     }
 
     @PostMapping("/login")
-    public ApiResponse<LoginResponse> login(
+    public ApiResponse<Void> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
-        AuthTokens tokens = authService.login(request.getUsername(), request.getPassword());
+        AuthTokens tokens = authService.login(request.getEmail(), request.getPassword());
         setRefreshTokenCookie(response, tokens.getRefreshToken());
-        return ApiResponse.success(new LoginResponse(tokens.getAccessToken()));
+        response.setHeader("Authorization", "Bearer " + tokens.getAccessToken());
+        return ApiResponse.successMessage("Login successful");
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<LoginResponse> refresh(
+    public ApiResponse<Void> refresh(
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response
     ) {
@@ -70,7 +69,8 @@ public class AuthController {
         }
         AuthTokens tokens = authService.refresh(refreshToken);
         setRefreshTokenCookie(response, tokens.getRefreshToken());
-        return ApiResponse.success(new LoginResponse(tokens.getAccessToken()));
+        response.setHeader("Authorization", "Bearer " + tokens.getAccessToken());
+        return ApiResponse.successMessage("Token refreshed");
     }
 
     @PostMapping("/logout")
@@ -82,7 +82,7 @@ public class AuthController {
             authService.logout(refreshToken);
         }
         clearRefreshTokenCookie(response);
-        return ApiResponse.success(null);
+        return ApiResponse.successMessage("Logout successful");
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {

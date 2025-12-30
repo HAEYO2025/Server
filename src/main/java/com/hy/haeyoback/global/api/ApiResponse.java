@@ -22,6 +22,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>(true, data, null, null, Instant.now().toString());
     }
 
+    public static <T> ApiResponse<T> successMessage(String message) {
+        return new ApiResponse<>(true, null, null, message, Instant.now().toString());
+    }
+
     public static <T> ApiResponse<T> failure(String errorCode, String message) {
         return new ApiResponse<>(false, null, errorCode, message, Instant.now().toString());
     }

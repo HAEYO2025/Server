@@ -12,8 +12,7 @@ import jakarta.persistence.Table;
 @Table(
         name = "users",
         indexes = {
-                @Index(name = "idx_users_email", columnList = "email"),
-                @Index(name = "idx_users_username", columnList = "username")
+                @Index(name = "idx_users_email", columnList = "email")
         }
 )
 public class User {
@@ -25,18 +24,14 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, unique = true)
-    private String username;
-
     @Column(nullable = false)
     private String password;
 
     protected User() {
     }
 
-    public User(String email, String username, String password) {
+    public User(String email, String password) {
         this.email = email;
-        this.username = username;
         this.password = password;
     }
 
@@ -46,10 +41,6 @@ public class User {
 
     public String getEmail() {
         return email;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public String getPassword() {
