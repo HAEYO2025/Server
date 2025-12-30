@@ -10,7 +10,7 @@ import java.util.List;
 
 public abstract class JsonListConverter<T> implements AttributeConverter<List<T>, String> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final TypeReference<List<T>> typeReference;
 
     protected JsonListConverter(TypeReference<List<T>> typeReference) {
@@ -35,7 +35,7 @@ public abstract class JsonListConverter<T> implements AttributeConverter<List<T>
             return List.of();
         }
         try {
-            return objectMapper.readValue(dbData, typeReference);
+            return List.copyOf(objectMapper.readValue(dbData, typeReference));
         } catch (IOException e) {
             throw new IllegalArgumentException("Error converting JSON to list", e);
         }
