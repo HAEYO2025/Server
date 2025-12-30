@@ -19,6 +19,6 @@ cookie:
   refresh-token:
     name: refreshToken
     http-only: true
-    secure: true
+    secure: ${COOKIE_REFRESH_SECURE:false}
     same-site: Strict
     path: /api/auth

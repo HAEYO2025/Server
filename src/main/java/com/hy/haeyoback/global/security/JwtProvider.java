@@ -4,7 +4,6 @@ import com.hy.haeyoback.global.constants.JwtConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import javax.crypto.SecretKey;
@@ -36,7 +35,7 @@ public class JwtProvider {
                 .claim(JwtConstants.CLAIM_TOKEN_TYPE, JwtConstants.TOKEN_TYPE_ACCESS)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .signWith(signingKey)
                 .compact();
     }
 
@@ -48,7 +47,7 @@ public class JwtProvider {
                 .claim(JwtConstants.CLAIM_TOKEN_TYPE, JwtConstants.TOKEN_TYPE_REFRESH)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
-                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .signWith(signingKey)
                 .compact();
     }
 

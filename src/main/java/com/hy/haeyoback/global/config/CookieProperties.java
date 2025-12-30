@@ -7,7 +7,7 @@ public class CookieProperties {
 
     private String name = "refreshToken";
     private boolean httpOnly = true;
-    private boolean secure = true;
+    private boolean secure = false;
     private String sameSite = "Strict";
     private String path = "/api/auth";
 
