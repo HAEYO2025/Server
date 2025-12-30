@@ -14,43 +14,43 @@ public class DataInitializer {
         return args -> {
             if (repository.count() == 0) {
                 repository.save(new LearningContent(
-                        "Spring Boot 기초",
-                        "Spring Boot의 기본 개념과 프로젝트 구조를 배워봅니다.",
-                        "Backend",
-                        "https://example.com/thumbnails/spring-boot-basics.jpg",
-                        "# Spring Boot 기초\n\nSpring Boot는 스프링 기반 애플리케이션을 빠르고 쉽게 개발할 수 있도록 도와주는 프레임워크입니다.\n\n## 주요 특징\n- 자동 설정(Auto Configuration)\n- 내장 서버(Embedded Server)\n- 스타터 의존성(Starter Dependencies)\n\n## 시작하기\n1. Spring Initializr에서 프로젝트 생성\n2. IDE에서 프로젝트 열기\n3. @SpringBootApplication 어노테이션 확인\n4. 애플리케이션 실행"
+                        "구명조끼 올바른 착용법",
+                        "비상 상황에서 생명을 구하는 구명조끼의 올바른 착용 방법을 배웁니다.",
+                        "안전장비",
+                        "https://example.com/thumbnails/lifejacket.jpg",
+                        "# 구명조끼 올바른 착용법\n\n구명조끼는 해상 사고 시 생명을 구하는 가장 중요한 안전 장비입니다.\n\n## 착용 전 확인사항\n- 구명조끼의 손상 여부 확인\n- 공기 주입 장치 작동 확인\n- 호루라기 및 구조등 부착 확인\n\n## 올바른 착용 방법\n1. 머리 위로 구명조끼를 씌웁니다\n2. 가슴 부분의 벨트를 단단히 조입니다\n3. 배 부분의 벨트를 조입니다\n4. 다리 사이의 벨트를 연결합니다\n\n## 주의사항\n- 느슨하게 착용하면 물에 빠졌을 때 벗겨질 수 있습니다\n- 어린이는 반드시 어린이용 구명조끼를 착용해야 합니다\n- 긴급 상황에서는 자동 팽창식 구명조끼가 자동으로 부풀어 오릅니다"
                 ));
 
                 repository.save(new LearningContent(
-                        "RESTful API 설계",
-                        "REST 원칙에 따른 API 설계 방법을 학습합니다.",
-                        "Backend",
-                        "https://example.com/thumbnails/restful-api.jpg",
-                        "# RESTful API 설계\n\nREST(Representational State Transfer)는 웹 서비스 설계 아키텍처 스타일입니다.\n\n## REST 원칙\n1. **Stateless**: 무상태성\n2. **Cacheable**: 캐시 처리 가능\n3. **Uniform Interface**: 일관된 인터페이스\n4. **Client-Server**: 클라이언트-서버 구조\n\n## HTTP 메서드\n- GET: 조회\n- POST: 생성\n- PUT: 수정\n- DELETE: 삭제\n\n## URL 설계 예시\n- GET /api/users - 사용자 목록 조회\n- GET /api/users/{id} - 특정 사용자 조회\n- POST /api/users - 사용자 생성\n- PUT /api/users/{id} - 사용자 수정\n- DELETE /api/users/{id} - 사용자 삭제"
+                        "해상 조난 신호 방법",
+                        "긴급 상황에서 구조 요청을 위한 다양한 신호 방법을 학습합니다.",
+                        "비상대응",
+                        "https://example.com/thumbnails/distress-signal.jpg",
+                        "# 해상 조난 신호 방법\n\n해상에서 조난당했을 때 신속한 구조를 위해 올바른 신호 방법을 알아야 합니다.\n\n## 국제 조난 신호\n1. **SOS**: 모스 부호로 3짧-3길-3짧 (... --- ...)\n2. **메이데이**: 무선 통신으로 \"MAYDAY\" 3회 반복\n3. **팬팬**: 긴급하지만 생명 위협은 없을 때 \"PAN-PAN\" 3회\n\n## 시각적 신호\n- **연막**: 주간에 주황색 연막 사용\n- **조명탄**: 야간에 빨간색 조명탄 발사\n- **거울 반사**: 햇빛을 반사하여 신호\n- **팔 흔들기**: 양팔을 천천히 위아래로 흔들기\n\n## 음향 신호\n- 호루라기를 짧게 3번 불기\n- 1분 간격으로 반복\n\n## 무전 신호\n- VHF 채널 16번 사용\n- 위치, 인원, 상황 명확히 전달"
                 ));
 
                 repository.save(new LearningContent(
-                        "JPA와 Hibernate",
-                        "JPA와 Hibernate를 활용한 데이터베이스 연동 방법을 배웁니다.",
-                        "Database",
-                        "https://example.com/thumbnails/jpa-hibernate.jpg",
-                        "# JPA와 Hibernate\n\nJPA(Java Persistence API)는 자바 ORM 기술 표준이며, Hibernate는 JPA의 구현체입니다.\n\n## JPA 핵심 개념\n- **Entity**: 데이터베이스 테이블과 매핑되는 객체\n- **EntityManager**: 엔티티를 관리하는 인터페이스\n- **영속성 컨텍스트**: 엔티티를 영구 저장하는 환경\n\n## 어노테이션\n- @Entity: 엔티티 클래스 지정\n- @Id: 기본 키 지정\n- @GeneratedValue: 기본 키 자동 생성\n- @Column: 컬럼 매핑\n- @Table: 테이블 매핑\n\n## Spring Data JPA\nRepository 인터페이스를 통해 CRUD 작업을 쉽게 구현할 수 있습니다.\n\n```java\npublic interface UserRepository extends JpaRepository<User, Long> {\n    Optional<User> findByEmail(String email);\n}\n```"
+                        "해양 기상 이해하기",
+                        "안전한 해양 활동을 위한 기상 정보 해석 방법을 배웁니다.",
+                        "기상정보",
+                        "https://example.com/thumbnails/weather.jpg",
+                        "# 해양 기상 이해하기\n\n바다의 날씨는 육지보다 변화가 빠르고 예측이 어렵습니다.\n\n## 파도 정보\n- **파고**: 파도의 높이 (미터 단위)\n  - 0.5m 이하: 잔잔\n  - 1-2m: 약간 높음\n  - 2m 이상: 높음, 주의 필요\n\n## 풍속과 풍향\n- **풍속**: 바람의 세기 (m/s 또는 knot)\n  - 10m/s 이하: 약함\n  - 10-15m/s: 보통\n  - 15m/s 이상: 강함, 출항 자제\n\n## 기상특보\n- **주의보**: 해상 활동에 영향을 줄 수 있는 기상 현상\n- **경보**: 중대한 위험이 예상되는 경우\n\n## 구름과 하늘 관찰\n- 검은 구름이 빠르게 다가오면 폭풍 전조\n- 갑작스런 기온 변화는 기상 악화 신호\n- 파도가 높아지고 물결이 거칠어지면 즉시 육지로\n\n## 기상 정보 확인\n- 기상청 해양기상 예보 확인\n- 해양 앱 활용\n- 출항 전 반드시 기상 정보 확인"
                 ));
 
                 repository.save(new LearningContent(
-                        "Spring Security 기초",
-                        "Spring Security를 활용한 인증과 인가를 구현합니다.",
-                        "Security",
-                        "https://example.com/thumbnails/spring-security.jpg",
-                        "# Spring Security 기초\n\nSpring Security는 강력하고 유연한 인증 및 권한 부여 프레임워크입니다.\n\n## 핵심 개념\n1. **Authentication**: 인증 - 사용자가 누구인지 확인\n2. **Authorization**: 인가 - 사용자가 무엇을 할 수 있는지 확인\n\n## 주요 구성요소\n- SecurityFilterChain: 보안 필터 체인\n- UserDetailsService: 사용자 정보 조회\n- PasswordEncoder: 비밀번호 암호화\n- AuthenticationManager: 인증 관리\n\n## JWT 인증\nJSON Web Token을 사용한 Stateless 인증 방식\n\n### JWT 구조\n- Header: 토큰 타입과 알고리즘\n- Payload: 사용자 정보와 권한\n- Signature: 서명\n\n### 장점\n- 서버에 세션 저장 불필요\n- 확장성이 좋음\n- 다양한 플랫폼에서 사용 가능"
+                        "선박 안전 수칙",
+                        "선박 탑승 시 반드시 지켜야 할 안전 수칙을 학습합니다.",
+                        "선박안전",
+                        "https://example.com/thumbnails/boat-safety.jpg",
+                        "# 선박 안전 수칙\n\n선박 사고의 대부분은 기본 안전 수칙을 지키지 않아 발생합니다.\n\n## 탑승 전 확인사항\n- 날씨 확인\n- 구명조끼 위치 확인\n- 비상구 위치 파악\n- 구명보트 위치 확인\n\n## 탑승 중 안전수칙\n1. **구명조끼 착용**: 항상 착용 또는 가까이 보관\n2. **금연**: 지정된 장소에서만 흡연\n3. **과음 금지**: 음주는 판단력을 흐리게 합니다\n4. **난간 주의**: 난간에 기대거나 넘어가지 않기\n5. **어린이 감독**: 어린이는 항상 보호자와 함께\n\n## 비상 상황 대처\n- 선원의 지시에 따라 침착하게 행동\n- 구명조끼를 착용하고 비상구로 이동\n- 패닉 상태 금지, 질서 유지\n\n## 낙수 사고 예방\n- 갑판에서는 안전 난간 안쪽으로만 이동\n- 파도가 칠 때는 난간 근처에 가지 않기\n- 미끄러운 곳 주의\n- 술에 취한 상태로 갑판 출입 금지"
                 ));
 
                 repository.save(new LearningContent(
-                        "Docker 컨테이너 기초",
-                        "Docker를 활용한 애플리케이션 컨테이너화를 학습합니다.",
-                        "DevOps",
-                        "https://example.com/thumbnails/docker-basics.jpg",
-                        "# Docker 컨테이너 기초\n\nDocker는 애플리케이션을 컨테이너로 패키징하여 어디서든 실행할 수 있게 해주는 플랫폼입니다.\n\n## Docker의 장점\n- **일관성**: 개발, 테스트, 운영 환경 일치\n- **격리성**: 각 컨테이너는 독립적으로 실행\n- **이식성**: 어떤 환경에서든 동일하게 실행\n- **효율성**: 가상머신보다 가볍고 빠름\n\n## 주요 개념\n1. **Image**: 컨테이너 실행에 필요한 파일과 설정\n2. **Container**: 이미지를 실행한 인스턴스\n3. **Dockerfile**: 이미지를 빌드하는 스크립트\n4. **Docker Compose**: 여러 컨테이너를 정의하고 실행\n\n## 기본 명령어\n```bash\n# 이미지 빌드\ndocker build -t myapp .\n\n# 컨테이너 실행\ndocker run -p 8080:8080 myapp\n\n# 실행 중인 컨테이너 확인\ndocker ps\n\n# 컨테이너 중지\ndocker stop <container-id>\n```\n\n## Docker Compose 예시\n```yaml\nservices:\n  db:\n    image: postgres:16\n    environment:\n      POSTGRES_DB: mydb\n      POSTGRES_USER: user\n      POSTGRES_PASSWORD: password\n  \n  app:\n    build: .\n    ports:\n      - \"8080:8080\"\n    depends_on:\n      - db\n```"
+                        "해양 응급처치 기본",
+                        "해양 사고 시 응급 상황에 대처하는 기본 응급처치법을 배웁니다.",
+                        "응급처치",
+                        "https://example.com/thumbnails/first-aid.jpg",
+                        "# 해양 응급처치 기본\n\n바다에서는 즉각적인 의료 지원이 어려울 수 있어 기본 응급처치가 중요합니다.\n\n## 익수자 구조\n1. **구조 순서**\n   - 119에 신고\n   - 구명 장비 던지기 (구명환, 로프)\n   - 직접 물에 들어가는 것은 최후의 수단\n\n2. **구조 후 응급처치**\n   - 의식 확인\n   - 호흡 확인\n   - 필요시 심폐소생술 (CPR)\n\n## 심폐소생술 (CPR)\n1. 가슴 압박 30회 (1분당 100-120회)\n2. 인공호흡 2회\n3. 반복 실시\n\n## 저체온증 대처\n- 젖은 옷 벗기기\n- 담요나 마른 옷으로 감싸기\n- 따뜻한 음료 제공 (의식이 있을 때만)\n- 급격한 온도 변화 피하기\n\n## 해파리 쏘임\n- 식초로 환부 세척\n- 촉수 제거 (맨손 사용 금지)\n- 얼음찜질\n- 통증이 심하면 병원 방문\n\n## 출혈 처치\n- 깨끗한 천으로 상처 압박\n- 상처 부위를 심장보다 높게\n- 지혈대는 최후의 수단\n\n## 응급 약품 준비\n- 소독약, 붕대, 밴드\n- 진통제, 소화제\n- 멀미약\n- 화상 연고"
                 ));
             }
         };
