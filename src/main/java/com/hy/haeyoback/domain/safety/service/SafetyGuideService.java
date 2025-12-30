@@ -41,6 +41,12 @@ public class SafetyGuideService {
                 .collect(Collectors.toList());
     }
 
+    public List<SafetyGuideResponse> getGuidesBySituationAndCategory(SafetySituation situation, String category) {
+        return safetyGuideRepository.findBySituationAndCategoryOrderByPriorityAsc(situation, category).stream()
+                .map(SafetyGuideResponse::from)
+                .collect(Collectors.toList());
+    }
+
     public SafetyGuideDetailResponse getGuideById(Long id) {
         SafetyGuide guide = safetyGuideRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "Safety guide not found"));

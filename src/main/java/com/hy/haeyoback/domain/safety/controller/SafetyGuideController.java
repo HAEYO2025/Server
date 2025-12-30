@@ -26,7 +26,9 @@ public class SafetyGuideController {
     ) {
         List<SafetyGuideResponse> guides;
 
-        if (situation != null) {
+        if (situation != null && category != null) {
+            guides = safetyGuideService.getGuidesBySituationAndCategory(situation, category);
+        } else if (situation != null) {
             guides = safetyGuideService.getGuidesBySituation(situation);
         } else if (category != null) {
             guides = safetyGuideService.getGuidesByCategory(category);
