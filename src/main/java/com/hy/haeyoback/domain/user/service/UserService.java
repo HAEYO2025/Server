@@ -30,11 +30,10 @@ public class UserService {
     }
 
     public User authenticate(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "User not found"));
+        User user = userRepository.findByEmail(email).orElse(null);
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid email or password");
         }
 
         return user;
