@@ -8,6 +8,7 @@ import com.hy.haeyoback.domain.auth.service.AuthService;
 import com.hy.haeyoback.domain.user.dto.UserResponse;
 import com.hy.haeyoback.domain.user.service.UserService;
 import com.hy.haeyoback.global.api.ApiResponse;
+import com.hy.haeyoback.global.config.CookieProperties;
 import com.hy.haeyoback.global.exception.CustomException;
 import com.hy.haeyoback.global.exception.ErrorCode;
 import com.hy.haeyoback.global.security.JwtProvider;
@@ -29,13 +30,18 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final JwtProvider jwtProvider;
+    private final CookieProperties cookieProperties;
 
-    private static final String REFRESH_TOKEN_COOKIE = "refreshToken";
-
-    public AuthController(AuthService authService, UserService userService, JwtProvider jwtProvider) {
+    public AuthController(
+            AuthService authService,
+            UserService userService,
+            JwtProvider jwtProvider,
+            CookieProperties cookieProperties
+    ) {
         this.authService = authService;
         this.userService = userService;
         this.jwtProvider = jwtProvider;
+        this.cookieProperties = cookieProperties;
     }
 
     @PostMapping("/signup")
@@ -56,7 +62,7 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ApiResponse<LoginResponse> refresh(
-            @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if (refreshToken == null || refreshToken.isBlank()) {
@@ -69,7 +75,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
-            @CookieValue(value = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response
     ) {
         if (refreshToken != null && !refreshToken.isBlank()) {
@@ -85,22 +91,22 @@ public class AuthController {
         if (maxAge < 0) {
             maxAge = 0;
         }
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/api/auth")
+        ResponseCookie cookie = ResponseCookie.from(cookieProperties.getName(), refreshToken)
+                .httpOnly(cookieProperties.isHttpOnly())
+                .secure(cookieProperties.isSecure())
+                .sameSite(cookieProperties.getSameSite())
+                .path(cookieProperties.getPath())
                 .maxAge(maxAge)
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
     }
 
     private void clearRefreshTokenCookie(HttpServletResponse response) {
-        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/api/auth")
+        ResponseCookie cookie = ResponseCookie.from(cookieProperties.getName(), "")
+                .httpOnly(cookieProperties.isHttpOnly())
+                .secure(cookieProperties.isSecure())
+                .sameSite(cookieProperties.getSameSite())
+                .path(cookieProperties.getPath())
                 .maxAge(0)
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());

@@ -1,5 +1,6 @@
 package com.hy.haeyoback.global.security;
 
+import com.hy.haeyoback.global.constants.JwtConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.JwtException;
@@ -18,10 +19,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtProvider {
 
-    private static final String TOKEN_TYPE = "typ";
-    private static final String ACCESS_TOKEN = "access";
-    private static final String REFRESH_TOKEN = "refresh";
-
     private final JwtProperties properties;
     private final Key signingKey;
 
@@ -35,8 +32,8 @@ public class JwtProvider {
         Date expiry = new Date(now.getTime() + properties.getExpireTime());
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim("email", email)
-                .claim(TOKEN_TYPE, ACCESS_TOKEN)
+                .claim(JwtConstants.CLAIM_EMAIL, email)
+                .claim(JwtConstants.CLAIM_TOKEN_TYPE, JwtConstants.TOKEN_TYPE_ACCESS)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
@@ -48,7 +45,7 @@ public class JwtProvider {
         Date expiry = new Date(now.getTime() + properties.getRefreshExpireTime());
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim(TOKEN_TYPE, REFRESH_TOKEN)
+                .claim(JwtConstants.CLAIM_TOKEN_TYPE, JwtConstants.TOKEN_TYPE_REFRESH)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(signingKey, SignatureAlgorithm.HS256)
@@ -59,18 +56,18 @@ public class JwtProvider {
         Claims claims = parseClaims(token);
         ensureAccessToken(claims);
         String subject = claims.getSubject();
-        String email = claims.get("email", String.class);
+        String email = claims.get(JwtConstants.CLAIM_EMAIL, String.class);
         Long userId;
         try {
             userId = Long.valueOf(subject);
         } catch (NumberFormatException ex) {
-            throw new JwtException("Invalid subject", ex);
+            throw new JwtException(JwtConstants.ERROR_INVALID_SUBJECT, ex);
         }
         JwtUserDetails principal = new JwtUserDetails(userId, email);
         return new UsernamePasswordAuthenticationToken(
                 principal,
                 null,
-                java.util.List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                java.util.List.of(new SimpleGrantedAuthority(JwtConstants.ROLE_USER))
         );
     }
 
@@ -86,7 +83,7 @@ public class JwtProvider {
         try {
             return Long.valueOf(subject);
         } catch (NumberFormatException ex) {
-            throw new JwtException("Invalid subject", ex);
+            throw new JwtException(JwtConstants.ERROR_INVALID_SUBJECT, ex);
         }
     }
 
@@ -98,7 +95,7 @@ public class JwtProvider {
         try {
             userId = Long.valueOf(subject);
         } catch (NumberFormatException ex) {
-            throw new JwtException("Invalid subject", ex);
+            throw new JwtException(JwtConstants.ERROR_INVALID_SUBJECT, ex);
         }
         return new RefreshTokenInfo(userId, claims.getExpiration().toInstant());
     }
@@ -112,16 +109,16 @@ public class JwtProvider {
     }
 
     private void ensureAccessToken(Claims claims) {
-        String type = claims.get(TOKEN_TYPE, String.class);
-        if (!ACCESS_TOKEN.equals(type)) {
-            throw new JwtException("Invalid token type");
+        String type = claims.get(JwtConstants.CLAIM_TOKEN_TYPE, String.class);
+        if (!JwtConstants.TOKEN_TYPE_ACCESS.equals(type)) {
+            throw new JwtException(JwtConstants.ERROR_INVALID_TOKEN_TYPE);
         }
     }
 
     private void ensureRefreshToken(Claims claims) {
-        String type = claims.get(TOKEN_TYPE, String.class);
-        if (!REFRESH_TOKEN.equals(type)) {
-            throw new JwtException("Invalid token type");
+        String type = claims.get(JwtConstants.CLAIM_TOKEN_TYPE, String.class);
+        if (!JwtConstants.TOKEN_TYPE_REFRESH.equals(type)) {
+            throw new JwtException(JwtConstants.ERROR_INVALID_TOKEN_TYPE);
         }
     }
 
