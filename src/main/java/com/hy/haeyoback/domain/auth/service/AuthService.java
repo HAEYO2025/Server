@@ -8,8 +8,6 @@ import com.hy.haeyoback.domain.user.service.UserService;
 import com.hy.haeyoback.global.exception.CustomException;
 import com.hy.haeyoback.global.exception.ErrorCode;
 import com.hy.haeyoback.global.security.JwtProvider;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import java.time.Instant;
 import org.springframework.stereotype.Service;
 
@@ -41,14 +39,7 @@ public class AuthService {
     }
 
     public AuthTokens refresh(String refreshToken) {
-        JwtProvider.RefreshTokenInfo info;
-        try {
-            info = jwtProvider.parseRefreshToken(refreshToken);
-        } catch (ExpiredJwtException ex) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "Token expired");
-        } catch (JwtException | IllegalArgumentException ex) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid token");
-        }
+        JwtProvider.RefreshTokenInfo info = jwtProvider.parseRefreshToken(refreshToken);
         Long userId = info.userId();
         RefreshToken stored = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "Invalid refresh token"));
