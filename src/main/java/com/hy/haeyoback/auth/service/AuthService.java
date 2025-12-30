@@ -30,6 +30,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
+    @Transactional
     public AuthTokens login(String email, String password) {
         User user = userService.authenticate(email, password);
 
@@ -40,6 +41,7 @@ public class AuthService {
         return new AuthTokens(accessToken, refreshToken);
     }
 
+    @Transactional
     public AuthTokens refresh(String refreshToken) {
         JwtProvider.RefreshTokenInfo info = jwtProvider.parseRefreshToken(refreshToken);
         Long userId = info.userId();
@@ -56,11 +58,11 @@ public class AuthService {
         return new AuthTokens(newAccessToken, newRefreshToken);
     }
 
+    @Transactional
     public void logout(String refreshToken) {
         refreshTokenRepository.deleteByToken(refreshToken);
     }
 
-    @Transactional
     private void saveRefreshToken(Long userId, String refreshToken, Instant expiresAt) {
         RefreshToken token = refreshTokenRepository.findByUserId(userId)
                 .orElse(null);
