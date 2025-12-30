@@ -30,8 +30,8 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public AuthTokens login(String email, String password) {
-        User user = userService.authenticate(email, password);
+    public AuthTokens login(String username, String password) {
+        User user = userService.authenticate(username, password);
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtProvider.generateRefreshToken(user.getId());

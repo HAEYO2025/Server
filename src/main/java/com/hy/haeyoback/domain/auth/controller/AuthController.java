@@ -40,7 +40,7 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ApiResponse<UserResponse> signup(@Valid @RequestBody SignupRequest request) {
-        UserResponse response = userService.signup(request.getEmail(), request.getPassword());
+        UserResponse response = userService.signup(request.getEmail(), request.getUsername(), request.getPassword());
         return ApiResponse.success(response);
     }
 
@@ -49,7 +49,7 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
-        AuthTokens tokens = authService.login(request.getEmail(), request.getPassword());
+        AuthTokens tokens = authService.login(request.getUsername(), request.getPassword());
         setRefreshTokenCookie(response, tokens.getRefreshToken());
         return ApiResponse.success(new LoginResponse(tokens.getAccessToken()));
     }
