@@ -114,4 +114,8 @@ public class SafetyGuide {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public Integer getShareCount() {
+        return shareCount;
+    }
 }
