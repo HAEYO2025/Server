@@ -57,7 +57,7 @@ public class AuthController {
         return ApiResponse.successMessage("Signup successful");
     }
 
-    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인하고 토큰을 발급받습니다.")
+    @Operation(summary = "로그인", description = "사용자 ID와 비밀번호로 로그인하고 토큰을 발급받습니다.")
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
@@ -67,7 +67,8 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
-        AuthTokens tokens = authService.login(request.getEmail(), request.getPassword());
+        Long userId = parseUserId(request.getUsername());
+        AuthTokens tokens = authService.login(userId, request.getPassword());
         setRefreshTokenCookie(response, tokens.getRefreshToken());
         response.setHeader("Authorization", "Bearer " + tokens.getAccessToken());
         return ApiResponse.successMessage("Login successful");
@@ -133,5 +134,13 @@ public class AuthController {
                 .maxAge(0)
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private Long parseUserId(String value) {
+        try {
+            return Long.valueOf(value);
+        } catch (NumberFormatException ex) {
+            throw new CustomException(ErrorCode.VALIDATION_ERROR, "Username must be a numeric id");
+        }
     }
 }
