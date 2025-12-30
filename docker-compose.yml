@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16
+    container_name: haeyo-postgres
+    environment:
+      POSTGRES_DB: haeyo
+      POSTGRES_USER: haeyo_user
+      POSTGRES_PASSWORD: haeyo_password1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: haeyo-back
+    depends_on:
+      - db
+    environment:
+      - spring.datasource.url=jdbc:postgresql://db:5432/haeyo
+      - spring.datasource.username=haeyo_user
+      - spring.datasource.password=haeyo_password1234
+      - spring.jpa.hibernate.ddl-auto=update
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+      - jwt.secret=cc421ba42d8b3709bacd7e0b0e17b793
+      - jwt.expire-time=3600000
+    ports:
+      - "8080:8080"
+
+volumes:
+  db-data:
