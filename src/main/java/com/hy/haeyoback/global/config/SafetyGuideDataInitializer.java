@@ -1,7 +1,7 @@
 package com.hy.haeyoback.global.config;
 
-import com.hy.haeyoback.domain.safety.entity.*;
-import com.hy.haeyoback.domain.safety.repository.SafetyGuideRepository;
+import com.hy.haeyoback.safety.entity.*;
+import com.hy.haeyoback.safety.repository.SafetyGuideRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
