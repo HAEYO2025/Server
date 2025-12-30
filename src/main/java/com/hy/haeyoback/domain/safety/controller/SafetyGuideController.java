@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/safety/guides")
+@RequestMapping("/api/safety/learning")
 public class SafetyGuideController {
 
     private final SafetyGuideService safetyGuideService;
