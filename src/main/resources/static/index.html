@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 위치 추적 - 해요 (브이월드)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.5.2/ol.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .username {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        #map {
+            flex: 1;
+            width: 100%;
+        }
+        
+        .control-panel {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .search-container {
+            margin-bottom: 15px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-box button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .search-box button:hover {
+            background: #5568d3;
+        }
+        
+        .location-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.active {
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.inactive {
+            background-color: #f44336;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-start:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-stop {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-center {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-banner {
+            background: #f44336;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .search-results {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-result-item:hover {
+            background: #f8f9fa;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .result-address {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .location-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            .button-group {
+                width: 100%;
+            }
+            
+            button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>📍 실시간 위치 추적 (브이월드)</h1>
+            <div class="user-info">
+                <span class="username" id="userInfo"></span>
+                <button class="btn-logout" onclick="logout()">로그아웃</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="error" class="error-banner"></div>
+    
+    <div id="map"></div>
+    
+    <div class="control-panel">
+        <!-- 장소 검색 -->
+        <div class="search-container">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="🔍 장소, 건물명, 주소를 검색하세요"
+                    onkeypress="if(event.key==='Enter') searchPlace()"
+                />
+                <button onclick="searchPlace()">검색</button>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+        </div>
+
+        <!-- 위치 정보 -->
+        <div class="location-info">
+            <div class="info-card">
+                <div class="info-label">위도</div>
+                <div class="info-value" id="latitude">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">경도</div>
+                <div class="info-value" id="longitude">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">정확도</div>
+                <div class="info-value" id="accuracy">-</div>
+            </div>
+            <div class="info-card">
+                <div class="info-label">업데이트</div>
+                <div class="info-value" id="lastUpdate">-</div>
+            </div>
+        </div>
+        
+        <!-- 컨트롤 버튼 -->
+        <div class="controls">
+            <div class="status">
+                <div class="status-dot inactive" id="statusDot"></div>
+                <span id="statusText">위치 추적 중지됨</span>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-start" id="startBtn" onclick="startTracking()">
+                    🎯 추적 시작
+                </button>
+                <button class="btn-stop" id="stopBtn" onclick="stopTracking()" style="display: none;">
+                    ⏸️ 추적 중지
+                </button>
+                <button class="btn-center" id="centerBtn" onclick="centerMap()" disabled>
+                    📌 내 위치로
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.5.2/dist/ol.js"></script>
+    <script>
+        const API_KEY = 'C52BE737-A08C-392F-978D-57BF695EEC19';
+        let map;
+        let marker;
+        let markerLayer;
+        let pathLayer;
+        let watchId = null;
+        let isTracking = false;
+        let currentPosition = null;
+        let path = [];
+
+        // 지도 초기화
+        function initMap() {
+            // 마커 레이어
+            markerLayer = new ol.layer.Vector({
+                source: new ol.source.Vector()
+            });
+
+            // 경로 레이어
+            pathLayer = new ol.layer.Vector({
+                source: new ol.source.Vector()
+            });
+
+            // 브이월드 타일 레이어
+            const baseLayer = new ol.layer.Tile({
+                source: new ol.source.XYZ({
+                    url: `http://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Base/{z}/{y}/{x}.png`
+                })
+            });
+
+            // 지도 생성 (부산 중심)
+            map = new ol.Map({
+                target: 'map',
+                layers: [baseLayer, pathLayer, markerLayer],
+                view: new ol.View({
+                    center: ol.proj.fromLonLat([129.0756, 35.1796]),
+                    zoom: 13
+                })
+            });
+
+            // 초기 마커 생성
+            createMarker([129.0756, 35.1796]);
+        }
+
+        // 마커 생성
+        function createMarker(coords) {
+            const markerSource = markerLayer.getSource();
+            markerSource.clear();
+
+            marker = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat(coords))
+            });
+
+            marker.setStyle(new ol.style.Style({
+                image: new ol.style.Icon({
+                    anchor: [0.5, 1],
+                    scale: 0.8,
+                    src: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%23667eea" stroke="white" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3" fill="white"></circle></svg>'
+                })
+            }));
+
+            markerSource.addFeature(marker);
+        }
+
+        // 장소 검색
+        async function searchPlace() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('검색어를 입력해주세요');
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `http://api.vworld.kr/req/search?service=search&request=search&version=2.0&crs=EPSG:4326&size=10&page=1&query=${encodeURIComponent(query)}&type=place&key=${API_KEY}`
+                );
+                
+                const data = await response.json();
+                
+                if (data.response.status === 'OK' && data.response.result.items.length > 0) {
+                    displaySearchResults(data.response.result.items);
+                } else {
+                    alert('검색 결과가 없습니다');
+                }
+            } catch (error) {
+                console.error('검색 오류:', error);
+                alert('검색 중 오류가 발생했습니다');
+            }
+        }
+
+        // 검색 결과 표시
+        function displaySearchResults(items) {
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = '';
+            resultsDiv.style.display = 'block';
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.innerHTML = `
+                    <div class="result-title">${item.title}</div>
+                    <div class="result-address">${item.address?.road || item.address?.parcel || ''}</div>
+                `;
+                div.onclick = () => {
+                    const lon = parseFloat(item.point.x);
+                    const lat = parseFloat(item.point.y);
+                    moveToLocation([lon, lat]);
+                    resultsDiv.style.display = 'none';
+                };
+                resultsDiv.appendChild(div);
+            });
+        }
+
+        // 특정 위치로 이동
+        function moveToLocation(coords) {
+            createMarker(coords);
+            map.getView().animate({
+                center: ol.proj.fromLonLat(coords),
+                zoom: 17,
+                duration: 1000
+            });
+        }
+
+        // 위치 추적 시작
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showError('이 브라우저는 위치 정보를 지원하지 않습니다.');
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                updatePosition,
+                handleError,
+                options
+            );
+
+            isTracking = true;
+            path = [];
+            pathLayer.getSource().clear();
+            updateUI();
+        }
+
+        // 위치 업데이트
+        function updatePosition(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            currentPosition = [lng, lat];
+            path.push([lng, lat]);
+
+            // 마커 업데이트
+            createMarker([lng, lat]);
+            
+            // 첫 위치 시 지도 중심 이동
+            if (path.length === 1) {
+                map.getView().animate({
+                    center: ol.proj.fromLonLat([lng, lat]),
+                    zoom: 16,
+                    duration: 1000
+                });
+            }
+
+            // 이동 경로 그리기
+            if (path.length > 1) {
+                const pathSource = pathLayer.getSource();
+                pathSource.clear();
+
+                const lineString = new ol.geom.LineString(
+                    path.map(coord => ol.proj.fromLonLat(coord))
+                );
+
+                const pathFeature = new ol.Feature({
+                    geometry: lineString
+                });
+
+                pathFeature.setStyle(new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#667eea',
+                        width: 4
+                    })
+                }));
+
+                pathSource.addFeature(pathFeature);
+            }
+
+            // 정보 업데이트
+            document.getElementById('latitude').textContent = lat.toFixed(6);
+            document.getElementById('longitude').textContent = lng.toFixed(6);
+            document.getElementById('accuracy').textContent = accuracy.toFixed(0) + 'm';
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('ko-KR');
+            document.getElementById('centerBtn').disabled = false;
+
+            hideError();
+        }
+
+        // 에러 처리
+        function handleError(error) {
+            let message = '';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = '위치 권한이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.';
+                    stopTracking();
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = '위치 정보를 사용할 수 없습니다.';
+                    break;
+                case error.TIMEOUT:
+                    message = '위치 요청 시간이 초과되었습니다.';
+                    break;
+                default:
+                    message = '알 수 없는 오류가 발생했습니다.';
+            }
+            
+            showError(message);
+        }
+
+        // 추적 중지
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            isTracking = false;
+            updateUI();
+        }
+
+        // 내 위치로 이동
+        function centerMap() {
+            if (currentPosition) {
+                map.getView().animate({
+                    center: ol.proj.fromLonLat(currentPosition),
+                    zoom: 16,
+                    duration: 500
+                });
+            }
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+
+            if (isTracking) {
+                statusDot.classList.remove('inactive');
+                statusDot.classList.add('active');
+                statusText.textContent = '위치 추적 중';
+                startBtn.style.display = 'none';
+                stopBtn.style.display = 'block';
+            } else {
+                statusDot.classList.remove('active');
+                statusDot.classList.add('inactive');
+                statusText.textContent = '위치 추적 중지됨';
+                startBtn.style.display = 'block';
+                stopBtn.style.display = 'none';
+            }
+        }
+
+        // 에러 표시
+        function showError(message) {
+            const errorBanner = document.getElementById('error');
+            errorBanner.textContent = message;
+            errorBanner.style.display = 'block';
+        }
+
+        // 에러 숨기기
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        // 페이지 로드 시 지도 초기화
+        window.onload = function() {
+            // 로그인 체크
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // 사용자 정보 표시
+            if (username) {
+                document.getElementById('userInfo').textContent = `${username}님`;
+            }
+            
+            initMap();
+        };
+        
+        // 로그아웃
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>
