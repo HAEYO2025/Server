@@ -6,6 +6,7 @@ import com.hy.haeyoback.domain.safety.entity.SafetySituation;
 import com.hy.haeyoback.domain.safety.service.SafetyGuideService;
 import com.hy.haeyoback.global.api.ApiResponse;
 import jakarta.validation.constraints.Positive;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
