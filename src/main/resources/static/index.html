@@ -3,14 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 위치 추적 - 해요 (브이월드)</title>
+    <title>실시간 위치 추적 - 해요</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.5.2/ol.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -33,10 +29,7 @@
             align-items: center;
         }
         
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
+        .header h1 { font-size: 24px; font-weight: 600; }
         
         .user-info {
             display: flex;
@@ -44,10 +37,7 @@
             gap: 15px;
         }
         
-        .username {
-            color: white;
-            font-weight: 600;
-        }
+        .username { color: white; font-weight: 600; }
         
         .btn-logout {
             padding: 8px 16px;
@@ -60,14 +50,9 @@
             transition: background 0.3s;
         }
         
-        .btn-logout:hover {
-            background: rgba(255,255,255,0.3);
-        }
+        .btn-logout:hover { background: rgba(255,255,255,0.3); }
         
-        #map {
-            flex: 1;
-            width: 100%;
-        }
+        #map { flex: 1; width: 100%; cursor: crosshair; }
         
         .control-panel {
             background: white;
@@ -76,9 +61,7 @@
             z-index: 1000;
         }
         
-        .search-container {
-            margin-bottom: 15px;
-        }
+        .search-container { margin-bottom: 15px; }
         
         .search-box {
             display: flex;
@@ -110,9 +93,7 @@
             transition: background 0.3s;
         }
         
-        .search-box button:hover {
-            background: #5568d3;
-        }
+        .search-box button:hover { background: #5568d3; }
         
         .location-info {
             display: grid;
@@ -168,9 +149,7 @@
             animation: pulse 2s infinite;
         }
         
-        .status-dot.inactive {
-            background-color: #f44336;
-        }
+        .status-dot.inactive { background-color: #f44336; }
         
         @keyframes pulse {
             0%, 100% { opacity: 1; }
@@ -198,9 +177,7 @@
             color: white;
         }
         
-        .btn-start:hover {
-            transform: translateY(-2px);
-        }
+        .btn-start:hover { transform: translateY(-2px); }
         
         .btn-stop {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -242,13 +219,8 @@
             transition: background 0.2s;
         }
 
-        .search-result-item:hover {
-            background: #f8f9fa;
-        }
-
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
+        .search-result-item:hover { background: #f8f9fa; }
+        .search-result-item:last-child { border-bottom: none; }
 
         .result-title {
             font-weight: 600;
@@ -260,30 +232,274 @@
             font-size: 13px;
             color: #666;
         }
+
+        /* 게시물 작성 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .category-btn {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .category-btn:hover { border-color: #667eea; }
+
+        .category-btn.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .category-icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .category-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .image-upload {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .image-upload:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .image-upload input { display: none; }
+
+        .image-preview {
+            margin-top: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* 게시물 팝업 */
+        .ol-popup {
+            position: absolute;
+            background-color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            bottom: 12px;
+            left: -50px;
+            min-width: 250px;
+        }
+        
+        .ol-popup:after, .ol-popup:before {
+            top: 100%;
+            border: solid transparent;
+            content: " ";
+            height: 0;
+            width: 0;
+            position: absolute;
+            pointer-events: none;
+        }
+        
+        .ol-popup:after {
+            border-top-color: white;
+            border-width: 10px;
+            left: 48px;
+            margin-left: -10px;
+        }
+        
+        .ol-popup-closer {
+            text-decoration: none;
+            position: absolute;
+            top: 2px;
+            right: 8px;
+            font-size: 20px;
+            color: #999;
+        }
+        
+        .ol-popup-closer:after {
+            content: "✖";
+        }
+
+        .popup-category {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .popup-category.TRASH {
+            background: #ffe5e5;
+            color: #d32f2f;
+        }
+
+        .popup-category.DAMAGE {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .popup-category.WILDLIFE {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .popup-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .popup-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .popup-address {
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .popup-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
+        }
         
         @media (max-width: 768px) {
             .location-info {
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            .controls {
-                flex-direction: column;
-            }
-            
-            .button-group {
-                width: 100%;
-            }
-            
-            button {
-                flex: 1;
-            }
+            .controls { flex-direction: column; }
+            .button-group { width: 100%; }
+            button { flex: 1; }
+            .category-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <h1>📍 실시간 위치 추적 (브이월드)</h1>
+            <h1>📍 실시간 위치 추적</h1>
             <div class="user-info">
                 <span class="username" id="userInfo"></span>
                 <button class="btn-logout" onclick="logout()">로그아웃</button>
@@ -296,7 +512,6 @@
     <div id="map"></div>
     
     <div class="control-panel">
-        <!-- 장소 검색 -->
         <div class="search-container">
             <div class="search-box">
                 <input 
@@ -310,7 +525,6 @@
             <div id="searchResults" class="search-results"></div>
         </div>
 
-        <!-- 위치 정보 -->
         <div class="location-info">
             <div class="info-card">
                 <div class="info-label">위도</div>
@@ -330,7 +544,6 @@
             </div>
         </div>
         
-        <!-- 컨트롤 버튼 -->
         <div class="controls">
             <div class="status">
                 <div class="status-dot inactive" id="statusDot"></div>
@@ -351,52 +564,296 @@
         </div>
     </div>
 
+    <!-- 게시물 작성 모달 -->
+    <div id="postModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📝 게시물 작성</h2>
+                <button class="btn-close" onclick="closePostModal()">&times;</button>
+            </div>
+            
+            <form id="postForm">
+                <div class="form-group">
+                    <label>카테고리 선택</label>
+                    <div class="category-grid">
+                        <div class="category-btn" data-category="TRASH">
+                            <div class="category-icon">🗑️</div>
+                            <div class="category-name">쓰레기</div>
+                        </div>
+                        <div class="category-btn" data-category="DAMAGE">
+                            <div class="category-icon">⚠️</div>
+                            <div class="category-name">기물파손</div>
+                        </div>
+                        <div class="category-btn" data-category="WILDLIFE">
+                            <div class="category-icon">🦋</div>
+                            <div class="category-name">생물</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>설명</label>
+                    <textarea id="postDescription" placeholder="상세 설명을 입력하세요..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>사진 첨부</label>
+                    <div class="image-upload" onclick="document.getElementById('imageInput').click()">
+                        <div>📷 사진을 선택하세요</div>
+                        <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)">
+                    </div>
+                    <div class="image-preview" id="imagePreview">
+                        <img id="previewImg" src="" alt="미리보기">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">게시하기</button>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/ol@v7.5.2/dist/ol.js"></script>
     <script>
         const API_KEY = 'C52BE737-A08C-392F-978D-57BF695EEC19';
-        let map;
-        let marker;
-        let markerLayer;
-        let pathLayer;
+        let map, marker, markerLayer, pathLayer, postLayer;
         let watchId = null;
         let isTracking = false;
         let currentPosition = null;
         let path = [];
+        let selectedCategory = null;
+        let selectedCoords = null;
+        let selectedImageBase64 = null;
+        let overlay;
 
-        // 지도 초기화
         function initMap() {
-            // 마커 레이어
-            markerLayer = new ol.layer.Vector({
-                source: new ol.source.Vector()
-            });
+            markerLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+            pathLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
+            postLayer = new ol.layer.Vector({ source: new ol.source.Vector() });
 
-            // 경로 레이어
-            pathLayer = new ol.layer.Vector({
-                source: new ol.source.Vector()
-            });
-
-            // 브이월드 타일 레이어
             const baseLayer = new ol.layer.Tile({
                 source: new ol.source.XYZ({
                     url: `http://api.vworld.kr/req/wmts/1.0.0/${API_KEY}/Base/{z}/{y}/{x}.png`
                 })
             });
 
-            // 지도 생성 (부산 중심)
+            const container = document.createElement('div');
+            container.className = 'ol-popup';
+            container.innerHTML = '<a href="#" class="ol-popup-closer"></a><div id="popup-content"></div>';
+            
+            overlay = new ol.Overlay({
+                element: container,
+                autoPan: true,
+                autoPanAnimation: { duration: 250 }
+            });
+
             map = new ol.Map({
                 target: 'map',
-                layers: [baseLayer, pathLayer, markerLayer],
+                layers: [baseLayer, pathLayer, postLayer, markerLayer],
+                overlays: [overlay],
                 view: new ol.View({
                     center: ol.proj.fromLonLat([129.0756, 35.1796]),
                     zoom: 13
                 })
             });
 
-            // 초기 마커 생성
             createMarker([129.0756, 35.1796]);
+            map.on('click', handleMapClick);
+            
+            container.querySelector('.ol-popup-closer').onclick = function() {
+                overlay.setPosition(undefined);
+                this.blur();
+                return false;
+            };
+
+            loadPosts();
         }
 
-        // 마커 생성
+        function handleMapClick(event) {
+            const feature = map.forEachFeatureAtPixel(event.pixel, f => f);
+            
+            if (feature && feature.get('post')) {
+                const post = feature.get('post');
+                showPostPopup(post, event.coordinate);
+            } else {
+                const coords = ol.proj.toLonLat(event.coordinate);
+                selectedCoords = coords;
+                openPostModal(coords);
+            }
+        }
+
+        function showPostPopup(post, coordinate) {
+            const categoryNames = {
+                'TRASH': '쓰레기',
+                'DAMAGE': '기물파손',
+                'WILDLIFE': '생물'
+            };
+            
+            let content = `
+                <div class="popup-category ${post.category}">${categoryNames[post.category]}</div>
+            `;
+            
+            if (post.imageUrl) {
+                content += `<img src="${post.imageUrl}" class="popup-image" alt="게시물 이미지">`;
+            }
+            
+            if (post.description) {
+                content += `<div class="popup-description">${post.description}</div>`;
+            }
+            
+            if (post.address) {
+                content += `<div class="popup-address">📍 ${post.address}</div>`;
+            }
+            
+            content += `
+                <div class="popup-meta">
+                    <span>👤 ${post.username}</span>
+                    <span>🕐 ${post.createdAt}</span>
+                </div>
+            `;
+            
+            document.getElementById('popup-content').innerHTML = content;
+            overlay.setPosition(coordinate);
+        }
+
+        function openPostModal(coords) {
+            document.getElementById('postModal').classList.add('active');
+            selectedCategory = null;
+            selectedImageBase64 = null;
+            document.getElementById('postForm').reset();
+            document.getElementById('imagePreview').style.display = 'none';
+            
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        function closePostModal() {
+            document.getElementById('postModal').classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    selectedCategory = this.dataset.category;
+                });
+            });
+        });
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImageBase64 = e.target.result;
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!selectedCategory) {
+                alert('카테고리를 선택해주세요');
+                return;
+            }
+
+            const description = document.getElementById('postDescription').value;
+            const username = localStorage.getItem('username');
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '게시 중...';
+
+            try {
+                const response = await fetch('/api/posts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Username': username
+                    },
+                    body: JSON.stringify({
+                        latitude: selectedCoords[1],
+                        longitude: selectedCoords[0],
+                        category: selectedCategory,
+                        description: description,
+                        imageBase64: selectedImageBase64
+                    })
+                });
+
+                if (response.ok) {
+                    alert('게시물이 작성되었습니다!');
+                    closePostModal();
+                    loadPosts();
+                } else {
+                    const error = await response.json();
+                    alert('게시물 작성 실패: ' + error.error);
+                }
+            } catch (error) {
+                alert('서버 연결 오류');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '게시하기';
+            }
+        });
+
+        async function loadPosts() {
+            try {
+                const response = await fetch('/api/posts');
+                const posts = await response.json();
+
+                const postSource = postLayer.getSource();
+                postSource.clear();
+
+                posts.forEach(post => {
+                    createPostMarker(post);
+                });
+            } catch (error) {
+                console.error('게시물 로드 오류:', error);
+            }
+        }
+
+        function createPostMarker(post) {
+            const categoryIcons = {
+                'TRASH': '🗑️',
+                'DAMAGE': '⚠️',
+                'WILDLIFE': '🦋'
+            };
+
+            const categoryColors = {
+                'TRASH': '#d32f2f',
+                'DAMAGE': '#f57c00',
+                'WILDLIFE': '#388e3c'
+            };
+
+            const icon = categoryIcons[post.category] || '📍';
+            const color = categoryColors[post.category] || '#667eea';
+
+            const feature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.fromLonLat([post.longitude, post.latitude])),
+                post: post
+            });
+
+            const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" viewBox="0 0 40 50">
+                <path d="M20 0C11.163 0 4 7.163 4 16c0 12 16 34 16 34s16-22 16-34c0-8.837-7.163-16-16-16z" fill="${color}"/>
+                <text x="20" y="20" text-anchor="middle" font-size="18" fill="white">${icon}</text>
+            </svg>`;
+
+            feature.setStyle(new ol.style.Style({
+                image: new ol.style.Icon({
+                    anchor: [0.5, 1],
+                    scale: 0.8,
+                    src: 'data:image/svg+xml;utf8,' + encodeURIComponent(svgIcon)
+                })
+            }));
+
+            postLayer.getSource().addFeature(feature);
+        }
+
         function createMarker(coords) {
             const markerSource = markerLayer.getSource();
             markerSource.clear();
@@ -416,7 +873,6 @@
             markerSource.addFeature(marker);
         }
 
-        // 장소 검색
         async function searchPlace() {
             const query = document.getElementById('searchInput').value.trim();
             if (!query) {
@@ -442,7 +898,6 @@
             }
         }
 
-        // 검색 결과 표시
         function displaySearchResults(items) {
             const resultsDiv = document.getElementById('searchResults');
             resultsDiv.innerHTML = '';
@@ -465,7 +920,6 @@
             });
         }
 
-        // 특정 위치로 이동
         function moveToLocation(coords) {
             createMarker(coords);
             map.getView().animate({
@@ -475,7 +929,6 @@
             });
         }
 
-        // 위치 추적 시작
         function startTracking() {
             if (!navigator.geolocation) {
                 showError('이 브라우저는 위치 정보를 지원하지 않습니다.');
@@ -500,7 +953,6 @@
             updateUI();
         }
 
-        // 위치 업데이트
         function updatePosition(position) {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
@@ -509,10 +961,8 @@
             currentPosition = [lng, lat];
             path.push([lng, lat]);
 
-            // 마커 업데이트
             createMarker([lng, lat]);
             
-            // 첫 위치 시 지도 중심 이동
             if (path.length === 1) {
                 map.getView().animate({
                     center: ol.proj.fromLonLat([lng, lat]),
@@ -521,7 +971,6 @@
                 });
             }
 
-            // 이동 경로 그리기
             if (path.length > 1) {
                 const pathSource = pathLayer.getSource();
                 pathSource.clear();
@@ -544,7 +993,6 @@
                 pathSource.addFeature(pathFeature);
             }
 
-            // 정보 업데이트
             document.getElementById('latitude').textContent = lat.toFixed(6);
             document.getElementById('longitude').textContent = lng.toFixed(6);
             document.getElementById('accuracy').textContent = accuracy.toFixed(0) + 'm';
@@ -554,7 +1002,6 @@
             hideError();
         }
 
-        // 에러 처리
         function handleError(error) {
             let message = '';
             
@@ -576,7 +1023,6 @@
             showError(message);
         }
 
-        // 추적 중지
         function stopTracking() {
             if (watchId !== null) {
                 navigator.geolocation.clearWatch(watchId);
@@ -586,7 +1032,6 @@
             updateUI();
         }
 
-        // 내 위치로 이동
         function centerMap() {
             if (currentPosition) {
                 map.getView().animate({
@@ -597,7 +1042,6 @@
             }
         }
 
-        // UI 업데이트
         function updateUI() {
             const statusDot = document.getElementById('statusDot');
             const statusText = document.getElementById('statusText');
@@ -619,21 +1063,17 @@
             }
         }
 
-        // 에러 표시
         function showError(message) {
             const errorBanner = document.getElementById('error');
             errorBanner.textContent = message;
             errorBanner.style.display = 'block';
         }
 
-        // 에러 숨기기
         function hideError() {
             document.getElementById('error').style.display = 'none';
         }
 
-        // 페이지 로드 시 지도 초기화
         window.onload = function() {
-            // 로그인 체크
             const token = localStorage.getItem('token');
             const username = localStorage.getItem('username');
             
@@ -642,7 +1082,6 @@
                 return;
             }
             
-            // 사용자 정보 표시
             if (username) {
                 document.getElementById('userInfo').textContent = `${username}님`;
             }
@@ -650,7 +1089,6 @@
             initMap();
         };
         
-        // 로그아웃
         function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('username');
