@@ -62,14 +62,14 @@ public class AuthService {
 
     @Transactional
     private void saveRefreshToken(Long userId, String refreshToken, Instant expiresAt) {
-        RefreshToken token = refreshTokenRepository.findByUserIdForUpdate(userId)
+        RefreshToken token = refreshTokenRepository.findByUserId(userId)
                 .orElse(null);
         if (token == null) {
             try {
                 refreshTokenRepository.save(new RefreshToken(userId, refreshToken, expiresAt));
                 return;
             } catch (DataIntegrityViolationException ex) {
-                token = refreshTokenRepository.findByUserIdForUpdate(userId)
+                token = refreshTokenRepository.findByUserId(userId)
                         .orElseThrow(() -> ex);
             }
         }
