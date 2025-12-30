@@ -2,6 +2,7 @@ package com.hy.haeyoback.domain.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import com.hy.haeyoback.global.validation.ValidPassword;
 
 public class SignupRequest {
 
@@ -10,6 +11,7 @@ public class SignupRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
+    @ValidPassword
     private String password;
 
     public SignupRequest() {
