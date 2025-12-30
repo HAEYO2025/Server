@@ -48,10 +48,4 @@ public class SafetyGuideController {
         SafetyGuideDetailResponse guide = safetyGuideService.getGuideById(id);
         return ApiResponse.success(guide);
     }
-
-    @PostMapping("/{id}/share")
-    public ResponseEntity<Void> shareGuide(@PathVariable Long id) {
-        safetyGuideService.incrementShareCount(id);
-        return ResponseEntity.noContent().build();
-    }
 }

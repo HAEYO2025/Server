@@ -15,11 +15,10 @@ public class SafetyGuideResponse {
     private final String category;
     private final Integer priority;
     private final String thumbnailUrl;
-    private final Integer shareCount;
     private final LocalDateTime createdAt;
 
     private SafetyGuideResponse(Long id, String title, String summary, SafetySituation situation,
-                               String category, Integer priority, String thumbnailUrl, Integer shareCount, LocalDateTime createdAt) {
+                               String category, Integer priority, String thumbnailUrl, LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
         this.summary = summary;
@@ -27,7 +26,6 @@ public class SafetyGuideResponse {
         this.category = category;
         this.priority = priority;
         this.thumbnailUrl = thumbnailUrl;
-        this.shareCount = shareCount;
         this.createdAt = createdAt;
     }
 
@@ -40,7 +38,6 @@ public class SafetyGuideResponse {
                 guide.getCategory(),
                 guide.getPriority(),
                 guide.getThumbnailUrl(),
-                guide.getShareCount(),
                 guide.getCreatedAt()
         );
     }

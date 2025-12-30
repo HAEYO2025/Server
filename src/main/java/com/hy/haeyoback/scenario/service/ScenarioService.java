@@ -61,12 +61,6 @@ public class ScenarioService {
         scenarioRepository.delete(scenario);
     }
 
-    @Transactional
-    public void incrementShareCount(Long scenarioId) {
-        Scenario scenario = findScenarioById(scenarioId);
-        scenario.incrementShareCount();
-    }
-
     private Scenario findScenarioById(Long scenarioId) {
         return scenarioRepository.findById(scenarioId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "시나리오를 찾을 수 없습니다."));

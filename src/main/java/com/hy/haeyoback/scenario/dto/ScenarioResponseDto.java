@@ -17,7 +17,6 @@ public class ScenarioResponseDto {
     private final Double longitude;
     private final LocalDateTime startTime;
     private final UserResponse user;
-    private final Integer shareCount;
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
@@ -30,7 +29,6 @@ public class ScenarioResponseDto {
         this.longitude = scenario.getLongitude();
         this.startTime = scenario.getStartTime();
         this.user = (scenario.getUser() != null) ? new UserResponse(scenario.getUser().getId(), scenario.getUser().getEmail()) : null;
-        this.shareCount = scenario.getShareCount();
         this.createdAt = scenario.getCreatedAt();
         this.updatedAt = scenario.getUpdatedAt();
     }

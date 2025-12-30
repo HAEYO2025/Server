@@ -18,13 +18,12 @@ public class SafetyGuideDetailResponse {
     private final List<EmergencyContact> emergencyContacts;
     private final Integer priority;
     private final String thumbnailUrl;
-    private final Integer shareCount;
     private final LocalDateTime createdAt;
 
     private SafetyGuideDetailResponse(Long id, String title, String summary, SafetySituation situation,
                                      String category, List<SafetyStep> steps, List<SafetyWarning> warnings,
                                      List<EmergencyContact> emergencyContacts, Integer priority,
-                                     String thumbnailUrl, Integer shareCount, LocalDateTime createdAt) {
+                                     String thumbnailUrl, LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
         this.summary = summary;
@@ -35,7 +34,6 @@ public class SafetyGuideDetailResponse {
         this.emergencyContacts = emergencyContacts;
         this.priority = priority;
         this.thumbnailUrl = thumbnailUrl;
-        this.shareCount = shareCount;
         this.createdAt = createdAt;
     }
 
@@ -51,7 +49,6 @@ public class SafetyGuideDetailResponse {
                 guide.getEmergencyContacts(),
                 guide.getPriority(),
                 guide.getThumbnailUrl(),
-                guide.getShareCount(),
                 guide.getCreatedAt()
         );
     }
