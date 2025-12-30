@@ -18,10 +18,10 @@ public class GeocodingService {
     
     private final RestTemplate restTemplate;
     
-    @Value("${naver.client-id:YOUR_CLIENT_ID}")
+    @Value("${naver.client-id}")
     private String clientId;
     
-    @Value("${naver.client-secret:YOUR_CLIENT_SECRET}")
+    @Value("${naver.client-secret}")
     private String clientSecret;
     
     private static final String GEOCODING_URL = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode";

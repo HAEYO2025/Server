@@ -1,5 +1,7 @@
 package com.hy.haeyoback.service;
 
+import com.hy.haeyoback.security.JwtTokenProvider;
+
 import com.hy.haeyoback.dto.LoginRequest;
 import com.hy.haeyoback.dto.SignupRequest;
 import com.hy.haeyoback.entity.User;
@@ -20,6 +22,7 @@ public class UserService {
     
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
     
     /**
      * 회원가입
@@ -69,7 +72,9 @@ public class UserService {
         
         // 응답 생성
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "로그인 성공");
+        String token = jwtTokenProvider.createToken(user.getUsername());
+
+        response.put("token", token);
         response.put("username", user.getUsername());
         response.put("email", user.getEmail());
         response.put("userId", user.getId());

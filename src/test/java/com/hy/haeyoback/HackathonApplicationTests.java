@@ -1,5 +1,4 @@
-package com.example.hackathon;
-
+package com.hy.haeyoback;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

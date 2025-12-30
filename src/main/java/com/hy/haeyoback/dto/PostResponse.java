@@ -20,4 +20,6 @@ public class PostResponse {
     private String address;
     private String createdAt;
     private boolean resolved;
+    private int likes;
+    private int dislikes;
 }
