@@ -38,6 +38,12 @@ public class Scenario {
     @Column(nullable = false)
     private LocalDateTime startTime;
 
+    @OneToOne(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Report report;
+
+    @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<TurnHistory> history = new java.util.ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -59,7 +65,15 @@ public class Scenario {
         this.startTime = startTime;
         this.user = user;
     }
-    
+
+    public void setReport(Report report) {
+        this.report = report;
+    }
+
+    public void addHistory(String situation, String choice, Double survivalRate, String comment) {
+        this.history.add(new TurnHistory(this, situation, choice, survivalRate, comment));
+    }
+
     public void update(String title, String description, String address, Double latitude, Double longitude, LocalDateTime startTime) {
         this.title = title;
         this.description = description;
