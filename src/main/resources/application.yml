@@ -13,3 +13,12 @@ springdoc:
 jwt:
   secret: ${JWT_SECRET}
   expire-time: ${JWT_EXPIRE_TIME:3600000}
+  refresh-expire-time: ${JWT_REFRESH_EXPIRE_TIME:1209600000}
+
+cookie:
+  refresh-token:
+    name: refreshToken
+    http-only: true
+    secure: ${COOKIE_REFRESH_SECURE:false}
+    same-site: Strict
+    path: /api/auth

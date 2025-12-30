@@ -1,40 +1,79 @@
 package com.hy.haeyoback.domain.auth.service;
 
-import com.hy.haeyoback.domain.auth.dto.LoginResponse;
+import com.hy.haeyoback.domain.auth.dto.AuthTokens;
+import com.hy.haeyoback.domain.auth.entity.RefreshToken;
+import com.hy.haeyoback.domain.auth.repository.RefreshTokenRepository;
 import com.hy.haeyoback.domain.user.entity.User;
-import com.hy.haeyoback.domain.user.repository.UserRepository;
+import com.hy.haeyoback.domain.user.service.UserService;
 import com.hy.haeyoback.global.exception.CustomException;
 import com.hy.haeyoback.global.exception.ErrorCode;
 import com.hy.haeyoback.global.security.JwtProvider;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import java.time.Instant;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public AuthService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtProvider jwtProvider
+            UserService userService,
+            JwtProvider jwtProvider,
+            RefreshTokenRepository refreshTokenRepository
     ) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
         this.jwtProvider = jwtProvider;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
-    public LoginResponse login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "Invalid credentials"));
+    public AuthTokens login(String email, String password) {
+        User user = userService.authenticate(email, password);
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
+        String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtProvider.generateRefreshToken(user.getId());
+        JwtProvider.RefreshTokenInfo info = jwtProvider.parseRefreshToken(refreshToken);
+        saveRefreshToken(user.getId(), refreshToken, info.expiresAt());
+        return new AuthTokens(accessToken, refreshToken);
+    }
+
+    public AuthTokens refresh(String refreshToken) {
+        JwtProvider.RefreshTokenInfo info = jwtProvider.parseRefreshToken(refreshToken);
+        Long userId = info.userId();
+        RefreshToken stored = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new CustomException(ErrorCode.UNAUTHORIZED, "Invalid refresh token"));
+        if (!stored.getUserId().equals(userId)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid refresh token");
         }
+        User user = userService.getUserEntity(userId);
+        String newAccessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
+        String newRefreshToken = jwtProvider.generateRefreshToken(user.getId());
+        JwtProvider.RefreshTokenInfo newInfo = jwtProvider.parseRefreshToken(newRefreshToken);
+        saveRefreshToken(user.getId(), newRefreshToken, newInfo.expiresAt());
+        return new AuthTokens(newAccessToken, newRefreshToken);
+    }
 
-        String token = jwtProvider.generateToken(user.getId(), user.getEmail());
-        return new LoginResponse(token);
+    public void logout(String refreshToken) {
+        refreshTokenRepository.deleteByToken(refreshToken);
+    }
+
+    @Transactional
+    private void saveRefreshToken(Long userId, String refreshToken, Instant expiresAt) {
+        RefreshToken token = refreshTokenRepository.findByUserId(userId)
+                .orElse(null);
+        if (token == null) {
+            try {
+                refreshTokenRepository.save(new RefreshToken(userId, refreshToken, expiresAt));
+                return;
+            } catch (DataIntegrityViolationException ex) {
+                token = refreshTokenRepository.findByUserId(userId)
+                        .orElseThrow(() -> ex);
+            }
+        }
+        token.rotate(refreshToken, expiresAt);
+        refreshTokenRepository.save(token);
     }
 }
