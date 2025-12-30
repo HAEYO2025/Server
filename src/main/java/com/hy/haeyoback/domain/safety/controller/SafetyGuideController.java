@@ -5,12 +5,15 @@ import com.hy.haeyoback.domain.safety.dto.SafetyGuideResponse;
 import com.hy.haeyoback.domain.safety.entity.SafetySituation;
 import com.hy.haeyoback.domain.safety.service.SafetyGuideService;
 import com.hy.haeyoback.global.api.ApiResponse;
+import jakarta.validation.constraints.Positive;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/safety/learning")
+@RequestMapping("/api/safety/guides")
+@Validated
 public class SafetyGuideController {
 
     private final SafetyGuideService safetyGuideService;
@@ -40,7 +43,7 @@ public class SafetyGuideController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<SafetyGuideDetailResponse> getGuideById(@PathVariable Long id) {
+    public ApiResponse<SafetyGuideDetailResponse> getGuideById(@PathVariable @Positive Long id) {
         SafetyGuideDetailResponse guide = safetyGuideService.getGuideById(id);
         return ApiResponse.success(guide);
     }
