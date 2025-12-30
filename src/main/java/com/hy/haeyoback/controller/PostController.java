@@ -2,11 +2,15 @@ package com.hy.haeyoback.controller;
 
 import com.hy.haeyoback.dto.CreatePostRequest;
 import com.hy.haeyoback.dto.PostResponse;
+import com.hy.haeyoback.global.exception.CustomException;
+import com.hy.haeyoback.global.exception.ErrorCode;
+import com.hy.haeyoback.global.security.JwtUserDetails;
 import com.hy.haeyoback.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,19 +34,15 @@ public class PostController {
      */
     @PostMapping
     public ResponseEntity<?> createPost(
-            @RequestHeader(value = "X-Username", required = false) String username,
+            @AuthenticationPrincipal JwtUserDetails userDetails,
             @Valid @RequestBody CreatePostRequest request) {
         
-        // 로그인 확인 (헤더 체크)
-        if (username == null || username.isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "로그인이 필요한 기능입니다");
-            error.put("requireLogin", true);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "로그인이 필요한 기능입니다");
         }
         
         try {
-            PostResponse post = postService.createPost(username, request);
+            PostResponse post = postService.createPost(userDetails.getId(), request);
             return ResponseEntity.ok(post);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
@@ -67,16 +67,13 @@ public class PostController {
      */
     @GetMapping("/me")
     public ResponseEntity<?> getMyPosts(
-            @RequestHeader(value = "X-Username", required = false) String username) {
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
 
-        if (username == null || username.isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "로그인이 필요한 기능입니다");
-            error.put("requireLogin", true);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "로그인이 필요한 기능입니다");
         }
 
-        List<PostResponse> posts = postService.getMyPosts(username);
+        List<PostResponse> posts = postService.getMyPosts(userDetails.getId());
         return ResponseEntity.ok(posts);
     }
     
@@ -137,14 +134,10 @@ public class PostController {
     @PatchMapping("/{id}/resolve")
     public ResponseEntity<?> toggleResolved(
             @PathVariable Long id,
-            @RequestHeader(value = "X-Username", required = false) String username) {
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
         
-        // 로그인 확인
-        if (username == null || username.isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "로그인이 필요한 기능입니다");
-            error.put("requireLogin", true);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "로그인이 필요한 기능입니다");
         }
         
         try {
@@ -164,18 +157,14 @@ public class PostController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(
             @PathVariable Long id,
-            @RequestHeader(value = "X-Username", required = false) String username) {
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
         
-        // 로그인 확인
-        if (username == null || username.isEmpty()) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "로그인이 필요한 기능입니다");
-            error.put("requireLogin", true);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        if (userDetails == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "로그인이 필요한 기능입니다");
         }
         
         try {
-            postService.deletePost(id, username);
+            postService.deletePost(id, userDetails.getId());
             Map<String, String> response = new HashMap<>();
             response.put("message", "게시물이 삭제되었습니다");
             return ResponseEntity.ok(response);
@@ -192,12 +181,13 @@ public class PostController {
      */
     @GetMapping("/check-auth")
     public ResponseEntity<?> checkAuth(
-            @RequestHeader(value = "X-Username", required = false) String username) {
+            @AuthenticationPrincipal JwtUserDetails userDetails) {
         Map<String, Object> response = new HashMap<>();
         
-        if (username != null && !username.isEmpty()) {
+        if (userDetails != null) {
             response.put("authenticated", true);
-            response.put("username", username);
+            response.put("userId", userDetails.getId());
+            response.put("email", userDetails.getEmail());
         } else {
             response.put("authenticated", false);
         }

@@ -39,9 +39,8 @@ public class PostService {
      * 게시물 생성
      */
     @Transactional
-    public PostResponse createPost(String username, CreatePostRequest request) {
-        // 사용자 조회
-        User user = userRepository.findByUsername(username)
+    public PostResponse createPost(Long userId, CreatePostRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
         
         // 이미지 저장
@@ -81,11 +80,8 @@ public class PostService {
      * 내 게시물 조회
      */
     @Transactional(readOnly = true)
-    public List<PostResponse> getMyPosts(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다"));
-
-        return postRepository.findByUserIdOrderByCreatedAtDesc(user.getId()).stream()
+    public List<PostResponse> getMyPosts(Long userId) {
+        return postRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
@@ -149,12 +145,12 @@ public class PostService {
      * 게시물 삭제
      */
     @Transactional
-    public void deletePost(Long id, String username) {
+    public void deletePost(Long id, Long userId) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("게시물을 찾을 수 없습니다"));
         
         // 작성자 확인
-        if (!post.getUser().getUsername().equals(username)) {
+        if (!post.getUser().getId().equals(userId)) {
             throw new RuntimeException("게시물 삭제 권한이 없습니다");
         }
         
