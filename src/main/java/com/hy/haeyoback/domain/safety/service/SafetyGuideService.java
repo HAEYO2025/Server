@@ -48,8 +48,18 @@ public class SafetyGuideService {
     }
 
     public SafetyGuideDetailResponse getGuideById(Long id) {
-        SafetyGuide guide = safetyGuideRepository.findById(id)
-                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "Safety guide not found"));
+        SafetyGuide guide = findGuideById(id);
         return SafetyGuideDetailResponse.from(guide);
+    }
+
+    @Transactional
+    public void incrementShareCount(Long guideId) {
+        SafetyGuide guide = findGuideById(guideId);
+        guide.incrementShareCount();
+    }
+
+    private SafetyGuide findGuideById(Long guideId) {
+        return safetyGuideRepository.findById(guideId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "Safety guide not found"));
     }
 }

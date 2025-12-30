@@ -46,6 +46,8 @@ public class SafetyGuide {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    private Integer shareCount = 0;
+
     protected SafetyGuide() {
     }
 
@@ -64,9 +66,14 @@ public class SafetyGuide {
         this.createdAt = LocalDateTime.now();
     }
 
+    public void incrementShareCount() {
+        this.shareCount++;
+    }
+
     public Long getId() {
         return id;
     }
+
 
     public String getTitle() {
         return title;
@@ -106,5 +113,9 @@ public class SafetyGuide {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Integer getShareCount() {
+        return shareCount;
     }
 }
