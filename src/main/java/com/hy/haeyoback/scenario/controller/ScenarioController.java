@@ -1,5 +1,6 @@
 package com.hy.haeyoback.scenario.controller;
 
+import com.hy.haeyoback.scenario.dto.ScenarioCreateRequestDto;
 import com.hy.haeyoback.scenario.dto.ScenarioRequestDto;
 import com.hy.haeyoback.scenario.dto.ScenarioResponseDto;
 import com.hy.haeyoback.scenario.service.ScenarioService;
@@ -39,7 +40,7 @@ public class ScenarioController {
     })
     @PostMapping
     public ResponseEntity<Void> createScenario(
-            @Valid @RequestBody ScenarioRequestDto requestDto,
+            @Valid @RequestBody ScenarioCreateRequestDto requestDto,
             @AuthenticationPrincipal JwtUserDetails userDetails
     ) {
         User user = getUserFromUserDetails(userDetails);
@@ -54,6 +55,19 @@ public class ScenarioController {
     @GetMapping
     public ApiResponse<List<ScenarioResponseDto>> getAllScenarios() {
         return ApiResponse.success(scenarioService.getAllScenarios());
+    }
+
+    @Operation(summary = "내 시나리오 목록 조회", description = "로그인 사용자가 생성한 시나리오 목록을 조회합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자")
+    })
+    @GetMapping("/me")
+    public ApiResponse<List<ScenarioResponseDto.ScenarioSummaryResponse>> getMyScenarios(
+            @AuthenticationPrincipal JwtUserDetails userDetails
+    ) {
+        User user = getUserFromUserDetails(userDetails);
+        return ApiResponse.success(scenarioService.getMyScenarios(user));
     }
 
     @Operation(summary = "시나리오 상세 조회", description = "ID로 특정 시나리오를 상세 조회합니다.")

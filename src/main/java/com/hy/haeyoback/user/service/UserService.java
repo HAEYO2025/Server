@@ -39,6 +39,16 @@ public class UserService {
         return user;
     }
 
+    public User authenticateById(Long userId, String password) {
+        User user = userRepository.findById(userId).orElse(null);
+
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED, "Invalid credentials");
+        }
+
+        return user;
+    }
+
     public UserResponse getUserResponse(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND, "User not found"));

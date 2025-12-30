@@ -31,8 +31,8 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthTokens login(String email, String password) {
-        User user = userService.authenticate(email, password);
+    public AuthTokens login(Long userId, String password) {
+        User user = userService.authenticateById(userId, password);
 
         String accessToken = jwtProvider.generateAccessToken(user.getId(), user.getEmail());
         String refreshToken = jwtProvider.generateRefreshToken(user.getId());
